@@ -3,128 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Property Management Dashboard</title>
+    <title>Property Management Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
-<body class="bg-gray-100 font-sans antialiased">
+<body class="bg-gray-100 font-sans antialiased flex">
 
-    <div class="max-w-6xl mx-auto p-6">
-        <header class="mb-6 pb-4 border-b border-gray-300">
-            <h1 class="text-3xl font-bold text-gray-800">🏢 Property Management Task Center</h1>
-        </header>
+    <aside class="w-64 bg-slate-800 text-white min-h-screen p-5 space-y-6">
+        <div class="text-xl font-bold border-b border-slate-700 pb-3 flex items-center gap-2">
+            🏢 <span>Property Hub</span>
+        </div>
+        <nav class="space-y-2">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full text-left px-4 py-2.5 rounded transition-colors bg-blue-600 font-medium">
+                📊 Dashboard
+            </button>
+            <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full text-left px-4 py-2.5 rounded transition-colors text-slate-300 hover:bg-slate-700">
+                📋 Task Center
+            </button>
+            <button onclick="switchTab('settings')" id="nav-settings" class="w-full text-left px-4 py-2.5 rounded transition-colors text-slate-300 hover:bg-slate-700">
+                ⚙️ Settings
+            </button>
+        </nav>
+    </aside>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white p-4 rounded-lg shadow">
-                <h2 class="text-xl font-semibold mb-4 text-gray-700">Property Portfolio</h2>
-                <div class="space-y-3" id="property-list">
-                    </div>
-            </div>
-
-            <div class="md:col-span-2 bg-white p-6 rounded-lg shadow" id="workspace">
-                <div class="text-center text-gray-400 py-12 italic">
-                    ⬅️ Select a property portfolio from the left pane to manage tasks.
+    <main class="flex-1 p-8">
+        
+        <section id="page-dashboard" class="space-y-6">
+            <header>
+                <h1 class="text-3xl font-bold text-gray-800">Portfolio Dashboard</h1>
+                <p class="text-gray-500">Overview of active properties and pending management requirements.</p>
+            </header>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                    <span class="text-sm text-gray-400 font-semibold uppercase">Total Properties</span>
+                    <h3 class="text-3xl font-bold text-gray-800 mt-1" id="dash-total-properties">0</h3>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                    <span class="text-sm text-gray-400 font-semibold uppercase">Pending Key Tasks</span>
+                    <h3 class="text-3xl font-bold text-yellow-600 mt-1" id="dash-pending-tasks">0</h3>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                    <span class="text-sm text-gray-400 font-semibold uppercase">Registered Staff</span>
+                    <h3 class="text-3xl font-bold text-blue-600 mt-1" id="dash-total-staff">0</h3>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
+
+        <section id="page-tasks" class="hidden space-y-6">
+            <header>
+                <h1 class="text-3xl font-bold text-gray-800">Operational Tasks</h1>
+                <p class="text-gray-500">Create, assign, and track active workflows across operations.</p>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                    <h2 class="text-lg font-bold text-gray-700 mb-4">Select Location</h2>
+                    <div class="space-y-3" id="task-property-list"></div>
+                </div>
+
+                <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200" id="task-workspace">
+                    <div class="text-center text-gray-400 py-12 italic">
+                        ⬅️ Select a location to review or assign operational requirements.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-settings" class="hidden space-y-6">
+            <header>
+                <h1 class="text-3xl font-bold text-gray-800">System Configurations</h1>
+                <p class="text-gray-500">Manage internal data pipelines, personnel directories, and API endpoints.</p>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
+                    <h2 class="text-xl font-bold text-gray-800">Staff Personnel Directory</h2>
+                    <form onsubmit="addStaffMember(event)" class="flex gap-2">
+                        <input type="text" id="staff-name-input" required class="flex-1 border p-2 rounded outline-none focus:ring-2 focus:ring-blue-400" placeholder="New employee full name" />
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium transition-colors">Add</button>
+                    </form>
+                    <div class="divide-y divide-gray-100 border rounded-lg max-h-60 overflow-y-auto" id="settings-staff-list">
+                        </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
+                    <h2 class="text-xl font-bold text-gray-800">Messaging Infrastructure (EmailJS)</h2>
+                    <div class="space-y-3 text-sm">
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">Public Key</label>
+                            <input type="text" id="cfg-public-key" oninput="saveConfig()" class="w-full border p-2 rounded outline-none" placeholder="Paste Public Key" />
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">Service ID</label>
+                            <input type="text" id="cfg-service-id" oninput="saveConfig()" class="w-full border p-2 rounded outline-none" placeholder="Paste Service ID" />
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 font-medium mb-1">Template ID</label>
+                            <input type="text" id="cfg-template-id" oninput="saveConfig()" class="w-full border p-2 rounded outline-none" placeholder="Paste Template ID" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
 
     <script>
-        // Data Store
+        // Core Reactive Data Store
         let properties = [
             { id: 1, name: "Oakwood Apartments, Apt 4B", landlordEmail: "landlord1@example.com", tasks: [] },
             { id: 2, name: "Maple Street House, No. 12", landlordEmail: "landlord2@example.com", tasks: [] }
         ];
+        let employees = ["John Doe", "Sarah Jenkins"]; // Initial seed data
         let selectedPropertyId = null;
 
-        // Render the property list on the left side
-        function renderProperties() {
-            const listContainer = document.getElementById('property-list');
-            listContainer.innerHTML = '';
+        // Navigation Controller
+        function switchTab(tabId) {
+            ['dashboard', 'tasks', 'settings'].forEach(tab => {
+                document.getElementById(`page-${tab}`).classList.add('hidden');
+                document.getElementById(`nav-${tab}`).className = "w-full text-left px-4 py-2.5 rounded transition-colors text-slate-300 hover:bg-slate-700";
+            });
+            document.getElementById(`page-${tabId}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabId}`).className = "w-full text-left px-4 py-2.5 rounded transition-colors bg-blue-600 font-medium text-white";
+            
+            // Sync renders on navigation actions
+            if(tabId === 'dashboard') updateDashboardMetrics();
+            if(tabId === 'tasks') renderTaskProperties();
+            if(tabId === 'settings') renderStaffSettings();
+        }
 
-            properties.forEach(property => {
-                const isSelected = property.id === selectedPropertyId;
-                const card = document.createElement('div');
-                card.className = `p-4 border rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-blue-50 border-blue-400' : 'bg-white hover:bg-gray-50'}`;
-                card.onclick = () => selectProperty(property.id);
-                
-                card.innerHTML = `
-                    <h3 class="font-bold text-gray-800">${property.name}</h3>
-                    <p class="text-sm text-gray-500">📩 ${property.landlordEmail}</p>
-                    <span class="inline-block mt-2 text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
-                        ${property.tasks.length} Active Tasks
-                    </span>
+        // Dashboard Calculation Pipeline
+        function updateDashboardMetrics() {
+            document.getElementById('dash-total-properties').innerText = properties.length;
+            document.getElementById('dash-total-staff').innerText = employees.length;
+            
+            let totalPending = 0;
+            properties.forEach(p => {
+                totalPending += p.tasks.filter(t => t.status === 'Pending').length;
+            });
+            document.getElementById('dash-pending-tasks').innerText = totalPending;
+        }
+
+        // Settings View Pipeline
+        function renderStaffSettings() {
+            const list = document.getElementById('settings-staff-list');
+            list.innerHTML = '';
+            if(employees.length === 0) {
+                list.innerHTML = `<p class="p-3 text-sm text-gray-400 italic">No registered personnel configured.</p>`;
+                return;
+            }
+            employees.forEach((employee, index) => {
+                const row = document.createElement('div');
+                row.className = "flex justify-between items-center p-3 text-gray-700 text-sm";
+                row.innerHTML = `
+                    <span class="font-medium">${employee}</span>
+                    <button onclick="removeStaffMember(${index})" class="text-red-500 hover:text-red-700 text-xs font-semibold">Remove</button>
                 `;
-                listContainer.appendChild(card);
+                list.appendChild(row);
             });
         }
 
-        // Change active property
-        function selectProperty(id) {
-            selectedPropertyId = id;
-            renderProperties();
-            renderWorkspace();
+        function addStaffMember(e) {
+            e.preventDefault();
+            const input = document.getElementById('staff-name-input');
+            const name = input.value.trim();
+            if(name) {
+                employees.push(name);
+                input.value = '';
+                renderStaffSettings();
+            }
         }
 
-        // Render workspace on the right side
-        function renderWorkspace() {
-            const workspace = document.getElementById('workspace');
-            const property = properties.find(p => p.id === selectedPropertyId);
+        function removeStaffMember(index) {
+            employees.splice(index, 1);
+            renderStaffSettings();
+        }
 
+        // Task Interface Management
+        function renderTaskProperties() {
+            const container = document.getElementById('task-property-list');
+            container.innerHTML = '';
+            properties.forEach(p => {
+                const activeCount = p.tasks.filter(t => t.status === 'Pending').length;
+                const activeSelection = p.id === selectedPropertyId;
+                const card = document.createElement('div');
+                card.className = `p-4 border rounded-xl cursor-pointer transition-all ${activeSelection ? 'bg-blue-50 border-blue-400 shadow-sm' : 'bg-white hover:bg-gray-50 border-gray-200'}`;
+                card.onclick = () => { selectedPropertyId = p.id; renderTaskProperties(); renderTaskWorkspace(); };
+                card.innerHTML = `
+                    <h4 class="font-bold text-gray-800 text-sm">${p.name}</h4>
+                    <span class="inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full ${activeCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600'}">
+                        ${activeCount} Actions Pending
+                    </span>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderTaskWorkspace() {
+            const workspace = document.getElementById('task-workspace');
+            const property = properties.find(p => p.id === selectedPropertyId);
             if (!property) return;
 
-            // Generate task list layout
-            let tasksHtml = '<p class="text-gray-500 mb-6 italic">No tasks assigned yet.</p>';
-            if (property.tasks.length > 0) {
-                tasksHtml = '<div class="space-y-3 mb-6">';
-                property.tasks.forEach(task => {
-                    tasksHtml += `
-                        <div class="p-4 border-l-4 border-blue-500 bg-gray-50 rounded shadow-sm">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <strong class="text-blue-700 text-lg">🔑 ${task.type}</strong>
-                                    <p class="text-sm text-gray-600 mt-1">📍 <strong>Location:</strong> ${task.currentLocation}</p>
-                                    <p class="text-sm text-gray-600">👤 <strong>Staff:</strong> ${task.assignedEmployee}</p>
-                                    <p class="text-sm text-gray-600">📅 <strong>Scheduled:</strong> ${task.scheduledDateTime}</p>
-                                </div>
-                                <span class="px-2 py-1 text-xs font-bold rounded ${task.status === 'Collected' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
-                                    ${task.status}
-                                </span>
-                            </div>
-                            ${task.status !== 'Collected' ? `
-                                <button onclick="collectKey(${property.id}, ${task.id})" class="mt-3 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-1.5 px-3 rounded transition-colors">
-                                    ✅ Confirm Collection & Notify Landlord
-                                </button>
-                            ` : ''}
+            // Compile dropdown options from live employee list
+            let employeeOptions = `<option value="" disabled selected>Choose assigned personnel...</option>`;
+            employees.forEach(emp => {
+                employeeOptions += `<option value="${emp}">${emp}</option>`;
+            });
+
+            let tasksListHtml = '';
+            property.tasks.forEach(task => {
+                tasksListHtml += `
+                    <div class="p-4 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-center shadow-sm">
+                        <div>
+                            <span class="text-xs font-bold tracking-wide uppercase px-2 py-0.5 rounded ${task.status === 'Collected' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${task.status}</span>
+                            <h4 class="text-gray-800 font-bold mt-1 text-base">🔑 Key Transfer Action</h4>
+                            <p class="text-xs text-gray-500 mt-1">📍 Depot: ${task.currentLocation} | 👤 Courier: ${task.assignedEmployee}</p>
+                            <p class="text-xs text-gray-400">📅 Delivery Target: ${task.scheduledDateTime}</p>
                         </div>
-                    `;
-                });
-                tasksHtml += '</div>';
-            }
+                        ${task.status !== 'Collected' ? `
+                            <button id="btn-${task.id}" onclick="dispatchKeyAction(${property.id}, ${task.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded transition-colors shadow-sm">
+                                Confirm Collection
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            });
 
-            // Put workspace layout together
             workspace.innerHTML = `
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Unit: ${property.name}</h2>
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">📋 Current Tasks</h3>
-                    ${tasksHtml}
+                <div class="space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">${property.name}</h2>
+                        <p class="text-sm text-gray-500">Registered Notification Route: ${property.landlordEmail}</p>
+                    </div>
 
-                    <div class="border-t pt-4">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-3">Assign Key Collection Task</h3>
-                        <form onsubmit="addTask(event, ${property.id})" class="space-y-3">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-600 mb-1">Where is the key right now?</label>
-                                <input type="text" id="form-location" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-400 outline-none" placeholder="e.g. Front desk, Safe box" />
+                    <div class="space-y-3">
+                        <h3 class="text-sm font-semibold tracking-wide uppercase text-gray-400">Active Workflow Checklist</h3>
+                        ${property.tasks.length === 0 ? '<p class="text-gray-400 italic text-sm py-2">No operational tasks assigned to this location context.</p>' : `<div class="space-y-3">${tasksListHtml}</div>`}
+                    </div>
+
+                    <div class="border-t border-gray-100 pt-5 space-y-4">
+                        <h3 class="text-lg font-bold text-gray-800">Schedule Key Collection Asset</h3>
+                        <form onsubmit="submitTaskWorkflow(event, ${property.id})" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Current Key Assets Location Vault</label>
+                                <input type="text" id="w-location" required class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-400 text-sm" placeholder="e.g. Security Desk Safe, Onsite lockbox" />
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-600 mb-1">Assigned Employee</label>
-                                <input type="text" id="form-employee" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-400 outline-none" placeholder="Employee Name" />
+                                <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Assigned Personnel Courier</label>
+                                <select id="w-employee" required class="w-full border p-2 rounded bg-white outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+                                    ${employeeOptions}
+                                </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-600 mb-1">Date & Time to Fetch</label>
-                                <input type="datetime-local" id="form-date" required class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-400 outline-none" />
+                                <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Deployment Target Schedule</label>
+                                <input type="datetime-local" id="w-date" required class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-blue-400 text-sm" />
                             </div>
-                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors">
-                                ➕ Add Task
+                            <button type="submit" class="md:col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition-colors shadow-sm text-sm">
+                                Initialize Workflow & Track Asset
                             </button>
                         </form>
                     </div>
@@ -132,37 +268,59 @@
             `;
         }
 
-        // Form submission action
-        window.addTask = function(e, propertyId) {
+        function submitTaskWorkflow(e, propertyId) {
             e.preventDefault();
             const property = properties.find(p => p.id === propertyId);
-            
             const newTask = {
                 id: Date.now(),
                 type: 'Key Collection',
-                currentLocation: document.getElementById('form-location').value,
-                assignedEmployee: document.getElementById('form-employee').value,
-                scheduledDateTime: document.getElementById('form-date').value,
+                currentLocation: document.getElementById('w-location').value,
+                assignedEmployee: document.getElementById('w-employee').value,
+                scheduledDateTime: document.getElementById('w-date').value,
                 status: 'Pending'
             };
-
             property.tasks.push(newTask);
-            renderProperties();
-            renderWorkspace();
-        };
+            renderTaskWorkspace();
+        }
 
-        // Complete collection action
-        window.collectKey = function(propertyId, taskId) {
+        function dispatchKeyAction(propertyId, taskId) {
             const property = properties.find(p => p.id === propertyId);
             const task = property.tasks.find(t => t.id === taskId);
-            
-            task.status = 'Collected';
-            renderWorkspace();
-            alert(`⚡ Status updated to Collected! Simulation: Email notification sent to landlord.`);
-        };
+            const btn = document.getElementById(`btn-${taskId}`);
 
-        // Initialize display
-        renderProperties();
+            const pubKey = document.getElementById('cfg-public-key').value.trim();
+            const srvId = document.getElementById('cfg-service-id').value.trim();
+            const tplId = document.getElementById('cfg-template-id').value.trim();
+
+            if (btn) { btn.innerText = "⏳ Executing API..."; btn.disabled = true; }
+
+            if (!pubKey || !srvId || !tplId) {
+                alert(`Task Updated! Simulation mode: Notification ready to deliver to context ${property.landlordEmail}`);
+                task.status = 'Collected';
+                renderTaskWorkspace();
+                return;
+            }
+
+            emailjs.init(pubKey);
+            emailjs.send(srvId, tplId, {
+                to_email: property.landlordEmail,
+                property_name: property.name,
+                employee_name: task.assignedEmployee,
+                location: task.currentLocation,
+                date_time: task.scheduledDateTime
+            }).then(() => {
+                alert("Production Event Logs updated. External mail pipeline completed.");
+                task.status = 'Collected';
+                renderTaskWorkspace();
+            }).catch(err => {
+                console.error(err);
+                alert("Network Gateway Exception. Read system diagnostic runtime log outputs.");
+                if (btn) { btn.innerText = "Confirm Collection"; btn.disabled = false; }
+            });
+        }
+
+        // Startup Boot Routine
+        updateDashboardMetrics();
     </script>
 </body>
 </html>
