@@ -17,8 +17,14 @@
             <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full text-left px-4 py-2.5 rounded transition-colors bg-blue-600 font-medium">
                 📊 Dashboard
             </button>
+            <button onclick="switchTab('properties')" id="nav-properties" class="w-full text-left px-4 py-2.5 rounded transition-colors text-slate-300 hover:bg-slate-700">
+                🏢 Portfolio Registry
+            </button>
             <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full text-left px-4 py-2.5 rounded transition-colors text-slate-300 hover:bg-slate-700">
                 📋 Task Center
+            </button>
+            <button onclick="switchTab('archive')" id="nav-archive" class="w-full text-left px-4 py-2.5 rounded transition-colors text-slate-300 hover:bg-slate-700">
+                🗄️ Task Archive
             </button>
             <button onclick="switchTab('settings')" id="nav-settings" class="w-full text-left px-4 py-2.5 rounded transition-colors text-slate-300 hover:bg-slate-700">
                 ⚙️ Settings
@@ -34,18 +40,64 @@
                 <p class="text-gray-500">Overview of active properties and pending management requirements.</p>
             </header>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-                    <span class="text-sm text-gray-400 font-semibold uppercase">Total Properties</span>
+                    <span class="text-sm text-gray-400 font-semibold uppercase">Total Locations</span>
                     <h3 class="text-3xl font-bold text-gray-800 mt-1" id="dash-total-properties">0</h3>
                 </div>
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-                    <span class="text-sm text-gray-400 font-semibold uppercase">Pending Key Tasks</span>
-                    <h3 class="text-3xl font-bold text-yellow-600 mt-1" id="dash-pending-tasks">0</h3>
+                    <span class="text-sm text-gray-400 font-semibold uppercase">Pending Actions</span>
+                    <h3 class="text-3xl font-bold text-amber-600 mt-1" id="dash-pending-tasks">0</h3>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                    <span class="text-sm text-gray-400 font-semibold uppercase">Archived Tasks</span>
+                    <h3 class="text-3xl font-bold text-emerald-600 mt-1" id="dash-archived-tasks">0</h3>
                 </div>
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                     <span class="text-sm text-gray-400 font-semibold uppercase">Registered Staff</span>
                     <h3 class="text-3xl font-bold text-blue-600 mt-1" id="dash-total-staff">0</h3>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-properties" class="hidden space-y-6">
+            <header>
+                <h1 class="text-3xl font-bold text-gray-800">Portfolio Registry</h1>
+                <p class="text-gray-500">Provision fresh locations and register associated communication metrics.</p>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4 h-fit">
+                    <h2 class="text-xl font-bold text-gray-800">Provision Property</h2>
+                    <form onsubmit="submitNewProperty(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Business Name / Unit Address</label>
+                            <input type="text" id="prop-name-input" required class="w-full border p-2 rounded outline-none text-sm focus:ring-2 focus:ring-blue-400" placeholder="e.g. Oakwood Apartments, Apt 4B" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Notification Routing Email</label>
+                            <input type="email" id="prop-email-input" required class="w-full border p-2 rounded outline-none text-sm focus:ring-2 focus:ring-blue-400" placeholder="landlord@example.com" />
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition-colors text-sm shadow-sm">
+                            Add Location to Registry
+                        </button>
+                    </form>
+                </div>
+                <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Registered Accounts Portfolio</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-200 bg-gray-50 text-gray-400 font-semibold uppercase text-xs">
+                                    <th class="p-3">Business Name / Address</th>
+                                    <th class="p-3">Notification Path</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="portfolio-table-body" class="divide-y divide-gray-100 text-gray-700">
+                                </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
@@ -61,11 +113,34 @@
                     <h2 class="text-lg font-bold text-gray-700 mb-4">Select Location</h2>
                     <div class="space-y-3" id="task-property-list"></div>
                 </div>
-
                 <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200" id="task-workspace">
                     <div class="text-center text-gray-400 py-12 italic">
                         ⬅️ Select a location to review or assign operational requirements.
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-archive" class="hidden space-y-6">
+            <header>
+                <h1 class="text-3xl font-bold text-gray-800">Task Archive</h1>
+                <p class="text-gray-500">Historical manifest of completed operational actions and key distribution workflows.</p>
+            </header>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-200 bg-gray-50 text-gray-400 font-semibold uppercase text-xs">
+                                <th class="p-3">Location Unit</th>
+                                <th class="p-3">Vault Location</th>
+                                <th class="p-3">Personnel</th>
+                                <th class="p-3">Completed Horizon</th>
+                                <th class="p-3 text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="archive-table-body" class="divide-y divide-gray-100 text-gray-700">
+                            </tbody>
+                    </table>
                 </div>
             </div>
         </section>
@@ -80,11 +155,10 @@
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
                     <h2 class="text-xl font-bold text-gray-800">Staff Personnel Directory</h2>
                     <form onsubmit="addStaffMember(event)" class="flex gap-2">
-                        <input type="text" id="staff-name-input" required class="flex-1 border p-2 rounded outline-none focus:ring-2 focus:ring-blue-400" placeholder="New employee full name" />
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium transition-colors">Add</button>
+                        <input type="text" id="staff-name-input" required class="flex-1 border p-2 rounded outline-none focus:ring-2 focus:ring-blue-400 text-sm" placeholder="New employee full name" />
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium transition-colors text-sm shadow-sm">Add</button>
                     </form>
-                    <div class="divide-y divide-gray-100 border rounded-lg max-h-60 overflow-y-auto" id="settings-staff-list">
-                        </div>
+                    <div class="divide-y divide-gray-100 border rounded-lg max-h-60 overflow-y-auto" id="settings-staff-list"></div>
                 </div>
 
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
@@ -92,15 +166,15 @@
                     <div class="space-y-3 text-sm">
                         <div>
                             <label class="block text-gray-600 font-medium mb-1">Public Key</label>
-                            <input type="text" id="cfg-public-key" oninput="saveConfig()" class="w-full border p-2 rounded outline-none" placeholder="Paste Public Key" />
+                            <input type="text" id="cfg-public-key" class="w-full border p-2 rounded outline-none" placeholder="Paste Public Key" />
                         </div>
                         <div>
                             <label class="block text-gray-600 font-medium mb-1">Service ID</label>
-                            <input type="text" id="cfg-service-id" oninput="saveConfig()" class="w-full border p-2 rounded outline-none" placeholder="Paste Service ID" />
+                            <input type="text" id="cfg-service-id" class="w-full border p-2 rounded outline-none" placeholder="Paste Service ID" />
                         </div>
                         <div>
                             <label class="block text-gray-600 font-medium mb-1">Template ID</label>
-                            <input type="text" id="cfg-template-id" oninput="saveConfig()" class="w-full border p-2 rounded outline-none" placeholder="Paste Template ID" />
+                            <input type="text" id="cfg-template-id" class="w-full border p-2 rounded outline-none" placeholder="Paste Template ID" />
                         </div>
                     </div>
                 </div>
@@ -110,33 +184,36 @@
     </main>
 
     <script>
-        // Core Reactive Data Store
+        // Data Vault Structures
         let properties = [
             { id: 1, name: "Oakwood Apartments, Apt 4B", landlordEmail: "landlord1@example.com", tasks: [] },
             { id: 2, name: "Maple Street House, No. 12", landlordEmail: "landlord2@example.com", tasks: [] }
         ];
-        let employees = ["John Doe", "Sarah Jenkins"]; // Initial seed data
+        let employees = ["John Doe", "Sarah Jenkins"];
+        let archivedTasks = [];
         let selectedPropertyId = null;
 
-        // Navigation Controller
+        // Navigation Engine
         function switchTab(tabId) {
-            ['dashboard', 'tasks', 'settings'].forEach(tab => {
+            ['dashboard', 'properties', 'tasks', 'archive', 'settings'].forEach(tab => {
                 document.getElementById(`page-${tab}`).classList.add('hidden');
                 document.getElementById(`nav-${tab}`).className = "w-full text-left px-4 py-2.5 rounded transition-colors text-slate-300 hover:bg-slate-700";
             });
             document.getElementById(`page-${tabId}`).classList.remove('hidden');
-            document.getElementById(`nav-${tabId}`).className = "w-full text-left px-4 py-2.5 rounded transition-colors bg-blue-600 font-medium text-white";
+            document.getElementById(`nav-${tabId}`).className = "w-full text-left px-4 py-2.5 rounded transition-colors bg-blue-600 font-medium text-white shadow-sm";
             
-            // Sync renders on navigation actions
             if(tabId === 'dashboard') updateDashboardMetrics();
+            if(tabId === 'properties') renderPropertiesRegistry();
             if(tabId === 'tasks') renderTaskProperties();
+            if(tabId === 'archive') renderArchiveLedger();
             if(tabId === 'settings') renderStaffSettings();
         }
 
-        // Dashboard Calculation Pipeline
+        // Metrics Processor
         function updateDashboardMetrics() {
             document.getElementById('dash-total-properties').innerText = properties.length;
             document.getElementById('dash-total-staff').innerText = employees.length;
+            document.getElementById('dash-archived-tasks').innerText = archivedTasks.length;
             
             let totalPending = 0;
             properties.forEach(p => {
@@ -145,42 +222,49 @@
             document.getElementById('dash-pending-tasks').innerText = totalPending;
         }
 
-        // Settings View Pipeline
-        function renderStaffSettings() {
-            const list = document.getElementById('settings-staff-list');
-            list.innerHTML = '';
-            if(employees.length === 0) {
-                list.innerHTML = `<p class="p-3 text-sm text-gray-400 italic">No registered personnel configured.</p>`;
+        // Properties Logic Registry
+        function renderPropertiesRegistry() {
+            const body = document.getElementById('portfolio-table-body');
+            body.innerHTML = '';
+            if(properties.length === 0) {
+                body.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-400 italic">No registered assets.</td></tr>`;
                 return;
             }
-            employees.forEach((employee, index) => {
-                const row = document.createElement('div');
-                row.className = "flex justify-between items-center p-3 text-gray-700 text-sm";
-                row.innerHTML = `
-                    <span class="font-medium">${employee}</span>
-                    <button onclick="removeStaffMember(${index})" class="text-red-500 hover:text-red-700 text-xs font-semibold">Remove</button>
+            properties.forEach((p, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-800">${p.name}</td>
+                    <td class="p-3 text-gray-500">${p.landlordEmail}</td>
+                    <td class="p-3 text-right"><button onclick="removeProperty(${idx})" class="text-red-500 hover:text-red-700 text-xs font-semibold">Delete</button></td>
                 `;
-                list.appendChild(row);
+                body.appendChild(tr);
             });
         }
 
-        function addStaffMember(e) {
+        function submitNewProperty(e) {
             e.preventDefault();
-            const input = document.getElementById('staff-name-input');
-            const name = input.value.trim();
-            if(name) {
-                employees.push(name);
-                input.value = '';
-                renderStaffSettings();
-            }
+            const nameIn = document.getElementById('prop-name-input');
+            const emailIn = document.getElementById('prop-email-input');
+            
+            properties.push({
+                id: Date.now(),
+                name: nameIn.value.trim(),
+                landlordEmail: emailIn.value.trim(),
+                tasks: []
+            });
+            
+            nameIn.value = '';
+            emailIn.value = '';
+            renderPropertiesRegistry();
         }
 
-        function removeStaffMember(index) {
-            employees.splice(index, 1);
-            renderStaffSettings();
+        function removeProperty(index) {
+            properties.splice(index, 1);
+            renderPropertiesRegistry();
         }
 
-        // Task Interface Management
+        // Task Allocation Interface
         function renderTaskProperties() {
             const container = document.getElementById('task-property-list');
             container.innerHTML = '';
@@ -205,27 +289,24 @@
             const property = properties.find(p => p.id === selectedPropertyId);
             if (!property) return;
 
-            // Compile dropdown options from live employee list
             let employeeOptions = `<option value="" disabled selected>Choose assigned personnel...</option>`;
-            employees.forEach(emp => {
-                employeeOptions += `<option value="${emp}">${emp}</option>`;
-            });
+            employees.forEach(emp => { employeeOptions += `<option value="${emp}">${emp}</option>`; });
 
             let tasksListHtml = '';
-            property.tasks.forEach(task => {
+            const pendingTasks = property.tasks.filter(t => t.status === 'Pending');
+
+            pendingTasks.forEach(task => {
                 tasksListHtml += `
                     <div class="p-4 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-center shadow-sm">
                         <div>
-                            <span class="text-xs font-bold tracking-wide uppercase px-2 py-0.5 rounded ${task.status === 'Collected' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${task.status}</span>
+                            <span class="text-xs font-bold tracking-wide uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800">${task.status}</span>
                             <h4 class="text-gray-800 font-bold mt-1 text-base">🔑 Key Transfer Action</h4>
                             <p class="text-xs text-gray-500 mt-1">📍 Depot: ${task.currentLocation} | 👤 Courier: ${task.assignedEmployee}</p>
                             <p class="text-xs text-gray-400">📅 Delivery Target: ${task.scheduledDateTime}</p>
                         </div>
-                        ${task.status !== 'Collected' ? `
-                            <button id="btn-${task.id}" onclick="dispatchKeyAction(${property.id}, ${task.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded transition-colors shadow-sm">
-                                Confirm Collection
-                            </button>
-                        ` : ''}
+                        <button id="btn-${task.id}" onclick="dispatchKeyAction(${property.id}, ${task.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 px-3 rounded transition-colors shadow-sm">
+                            Confirm Collection
+                        </button>
                     </div>
                 `;
             });
@@ -236,12 +317,10 @@
                         <h2 class="text-2xl font-bold text-gray-800">${property.name}</h2>
                         <p class="text-sm text-gray-500">Registered Notification Route: ${property.landlordEmail}</p>
                     </div>
-
                     <div class="space-y-3">
                         <h3 class="text-sm font-semibold tracking-wide uppercase text-gray-400">Active Workflow Checklist</h3>
-                        ${property.tasks.length === 0 ? '<p class="text-gray-400 italic text-sm py-2">No operational tasks assigned to this location context.</p>' : `<div class="space-y-3">${tasksListHtml}</div>`}
+                        ${pendingTasks.length === 0 ? '<p class="text-gray-400 italic text-sm py-2">No active tasks pending completion.</p>' : `<div class="space-y-3">${tasksListHtml}</div>`}
                     </div>
-
                     <div class="border-t border-gray-100 pt-5 space-y-4">
                         <h3 class="text-lg font-bold text-gray-800">Schedule Key Collection Asset</h3>
                         <form onsubmit="submitTaskWorkflow(event, ${property.id})" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -271,33 +350,44 @@
         function submitTaskWorkflow(e, propertyId) {
             e.preventDefault();
             const property = properties.find(p => p.id === propertyId);
-            const newTask = {
+            property.tasks.push({
                 id: Date.now(),
                 type: 'Key Collection',
                 currentLocation: document.getElementById('w-location').value,
                 assignedEmployee: document.getElementById('w-employee').value,
                 scheduledDateTime: document.getElementById('w-date').value,
                 status: 'Pending'
-            };
-            property.tasks.push(newTask);
+            });
             renderTaskWorkspace();
         }
 
         function dispatchKeyAction(propertyId, taskId) {
             const property = properties.find(p => p.id === propertyId);
-            const task = property.tasks.find(t => t.id === taskId);
+            const taskIndex = property.tasks.findIndex(t => t.id === taskId);
+            const task = property.tasks[taskIndex];
             const btn = document.getElementById(`btn-${taskId}`);
 
             const pubKey = document.getElementById('cfg-public-key').value.trim();
             const srvId = document.getElementById('cfg-service-id').value.trim();
             const tplId = document.getElementById('cfg-template-id').value.trim();
 
-            if (btn) { btn.innerText = "⏳ Executing API..."; btn.disabled = true; }
+            if (btn) { btn.innerText = "⏳ Dispatching..."; btn.disabled = true; }
+
+            // Archive Callback Logic Pipeline
+            const archiveHandler = () => {
+                task.status = 'Collected';
+                task.propertyName = property.name;
+                task.archivedAt = new Date().toLocaleString();
+                
+                archivedTasks.push(task);
+                property.tasks.splice(taskIndex, 1); // Splice array to clear out operational pane
+                
+                renderTaskWorkspace();
+                renderTaskProperties();
+            };
 
             if (!pubKey || !srvId || !tplId) {
-                alert(`Task Updated! Simulation mode: Notification ready to deliver to context ${property.landlordEmail}`);
-                task.status = 'Collected';
-                renderTaskWorkspace();
+                archiveHandler();
                 return;
             }
 
@@ -309,17 +399,60 @@
                 location: task.currentLocation,
                 date_time: task.scheduledDateTime
             }).then(() => {
-                alert("Production Event Logs updated. External mail pipeline completed.");
-                task.status = 'Collected';
-                renderTaskWorkspace();
+                archiveHandler();
             }).catch(err => {
                 console.error(err);
-                alert("Network Gateway Exception. Read system diagnostic runtime log outputs.");
+                alert("Network Configuration Fault. Verify EmailJS payload metrics inside settings.");
                 if (btn) { btn.innerText = "Confirm Collection"; btn.disabled = false; }
             });
         }
 
-        // Startup Boot Routine
+        // Archive Engine UI
+        function renderArchiveLedger() {
+            const body = document.getElementById('archive-table-body');
+            body.innerHTML = '';
+            if(archivedTasks.length === 0) {
+                body.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 italic">No historical entries in ledger inventory.</td></tr>`;
+                return;
+            }
+            archivedTasks.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 border-b border-gray-100 text-xs md:text-sm";
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-800">${t.propertyName}</td>
+                    <td class="p-3 text-gray-600">${t.currentLocation}</td>
+                    <td class="p-3 text-gray-600">${t.assignedEmployee}</td>
+                    <td class="p-3 text-gray-400">${t.archivedAt}</td>
+                    <td class="p-3 text-right"><span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-medium uppercase text-[10px]">Archived</span></td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        // Settings Personnel Management
+        function renderStaffSettings() {
+            const list = document.getElementById('settings-staff-list');
+            list.innerHTML = '';
+            if(employees.length === 0) {
+                list.innerHTML = `<p class="p-3 text-sm text-gray-400 italic">No personnel initialized.</p>`;
+                return;
+            }
+            employees.forEach((employee, index) => {
+                const row = document.createElement('div');
+                row.className = "flex justify-between items-center p-3 text-gray-700 text-sm";
+                row.innerHTML = `<span>${employee}</span><button onclick="removeStaffMember(${index})" class="text-red-500 hover:text-red-700 text-xs font-semibold">Remove</button>`;
+                list.appendChild(row);
+            });
+        }
+
+        function addStaffMember(e) {
+            e.preventDefault();
+            const input = document.getElementById('staff-name-input');
+            if(input.value.trim()) { employees.push(input.value.trim()); input.value = ''; renderStaffSettings(); }
+        }
+
+        function removeStaffMember(index) { employees.splice(index, 1); renderStaffSettings(); }
+
         updateDashboardMetrics();
     </script>
 </body>
