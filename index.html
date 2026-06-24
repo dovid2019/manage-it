@@ -19,7 +19,7 @@
                 📊 Dashboard
             </button>
             <button onclick="switchTab('properties')" id="nav-properties" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white">
-                🏢 Business Registry
+                🏢 Portfolio Registry
             </button>
             <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white">
                 📋 Task Center
@@ -35,7 +35,7 @@
 
     <main class="flex-1 p-8 md:p-12 overflow-y-auto max-w-7xl">
         
-        <section id="page-dashboard" class="space-y-8 animate-fadeIn">
+        <section id="page-dashboard" class="space-y-8">
             <header>
                 <h1 class="text-3xl font-bold text-slate-800">Portfolio Dashboard</h1>
                 <p class="text-slate-500 mt-1">Overview of active business properties and operations metrics.</p>
@@ -47,7 +47,7 @@
                     <h3 class="text-3xl font-extrabold text-slate-800 mt-2" id="dash-total-properties">0</h3>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Pending Actions</span>
+                    <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Active Live Tasks</span>
                     <h3 class="text-3xl font-extrabold text-amber-500 mt-2" id="dash-pending-tasks">0</h3>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -61,68 +61,50 @@
             </div>
         </section>
 
-        <section id="page-properties" class="hidden space-y-8 animate-fadeIn">
-            <header>
-                <h1 class="text-3xl font-bold text-slate-800">Business Portfolio</h1>
-                <p class="text-slate-500 mt-1">Provision fresh business listings and manage routing metrics.</p>
-            </header>
+        <section id="page-properties" class="hidden space-y-8">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                <header>
+                    <h1 class="text-3xl font-bold text-slate-800">Portfolio Registry</h1>
+                    <p class="text-slate-500 mt-1">Select any property location row below to assign tasks or view permanent logs.</p>
+                </header>
+                <button onclick="openNewPropertyModal()" class="bg-[#0085d1] hover:bg-[#0074b7] text-white font-semibold px-5 py-3 rounded-xl text-sm tracking-wide shadow-sm transition-colors h-fit whitespace-nowrap">
+                    ➕ Add New Property
+                </button>
+            </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="bg-white p-8 rounded-[28px] shadow-sm border border-slate-100 space-y-6 h-fit">
-                    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Add New Property</h2>
-                    <form onsubmit="submitNewProperty(event)" class="space-y-5">
-                        <div class="space-y-1">
-                            <input type="text" id="prop-name-input" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 placeholder-slate-400 outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="Property Address" />
-                        </div>
-                        <div class="space-y-1">
-                            <input type="email" id="prop-email-input" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 placeholder-slate-400 outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="Notification Email" />
-                        </div>
-                        <button type="submit" class="w-full bg-[#0085d1] hover:bg-[#0074b7] text-white font-semibold py-3.5 rounded-xl transition-all text-sm shadow-sm tracking-wide mt-2">
-                            Add Property
-                        </button>
-                    </form>
-                </div>
-                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <h2 class="text-xl font-bold text-slate-800 mb-4 px-2">Registered Accounts Portfolio</h2>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm border-collapse">
-                            <thead>
-                                <tr class="border-b border-slate-100 bg-slate-50/70 text-slate-400 font-semibold uppercase text-xs">
-                                    <th class="p-4 rounded-l-xl">Business Name</th>
-                                    <th class="p-4">Notification Path</th>
-                                    <th class="p-4 text-right rounded-r-xl">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="portfolio-table-body" class="divide-y divide-slate-50 text-slate-700"></tbody>
-                        </table>
-                    </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-100 bg-slate-50/70 text-slate-400 font-semibold uppercase text-xs">
+                                <th class="p-4 pl-6">Business Location / Address</th>
+                                <th class="p-4">Notification Path</th>
+                                <th class="p-4 text-center">Active Workflows</th>
+                                <th class="p-4 text-right pr-6">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolio-table-rows" class="divide-y divide-slate-100 text-slate-700">
+                            </tbody>
+                    </table>
                 </div>
             </div>
         </section>
 
-        <section id="page-tasks" class="hidden space-y-8 animate-fadeIn">
+        <section id="page-tasks" class="hidden space-y-8">
             <header>
-                <h1 class="text-3xl font-bold text-slate-800">Operational Tasks</h1>
-                <p class="text-slate-500 mt-1">Create, assign, and track active workflows across operations.</p>
+                <h1 class="text-3xl font-bold text-slate-800">Operational Task Center</h1>
+                <p class="text-slate-500 mt-1">Live workspace showing current outstanding actions across properties.</p>
             </header>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 h-fit space-y-3">
-                    <h2 class="text-base font-bold text-slate-400 tracking-wider uppercase px-2 mb-2">Select Location</h2>
-                    <div class="space-y-2" id="task-property-list"></div>
-                </div>
-                <div class="lg:col-span-2 bg-white p-8 rounded-[28px] shadow-sm border border-slate-100" id="task-workspace">
-                    <div class="text-center text-slate-400 py-16 italic">
-                        ⬅️ Select a location to review or assign operational requirements.
+            <div class="bg-white p-8 rounded-[28px] shadow-sm border border-slate-100">
+                <div class="space-y-4" id="live-tasks-workspace-container">
                     </div>
-                </div>
             </div>
         </section>
 
-        <section id="page-archive" class="hidden space-y-8 animate-fadeIn">
+        <section id="page-archive" class="hidden space-y-8">
             <header>
-                <h1 class="text-3xl font-bold text-slate-800">Task Archive</h1>
-                <p class="text-slate-500 mt-1">Historical manifest of completed operational actions and key distribution workflows.</p>
+                <h1 class="text-3xl font-bold text-slate-800">Task Archive Ledger</h1>
+                <p class="text-slate-500 mt-1">Completed distribution histories and locked records logs.</p>
             </header>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div class="overflow-x-auto">
@@ -142,17 +124,17 @@
             </div>
         </section>
 
-        <section id="page-settings" class="hidden space-y-8 animate-fadeIn">
+        <section id="page-settings" class="hidden space-y-8">
             <header>
                 <h1 class="text-3xl font-bold text-slate-800">System Configurations</h1>
-                <p class="text-slate-500 mt-1">Manage internal data pipelines, personnel directories, and API endpoints.</p>
+                <p class="text-slate-500 mt-1">Manage personnel profiles and notification gateways configurations.</p>
             </header>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="bg-white p-8 rounded-[28px] shadow-sm border border-slate-100 space-y-5">
-                    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">System Users</h2>
+                    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Personnel Directory</h2>
                     <form onsubmit="addStaffMember(event)" class="flex gap-2">
-                        <input type="text" id="staff-name-input" required class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition-all focus:border-blue-500 text-sm" placeholder="New employee full name" />
+                        <input type="text" id="staff-name-input" required class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 text-sm" placeholder="New employee full name" />
                         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 rounded-xl font-medium transition-colors text-sm shadow-sm">Add</button>
                     </form>
                     <div class="divide-y divide-slate-100 border border-slate-100 rounded-xl max-h-64 overflow-y-auto bg-slate-50/30" id="settings-staff-list"></div>
@@ -180,15 +162,69 @@
 
     </main>
 
+    <div id="modal-new-property" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-8 rounded-[28px] shadow-2xl border border-slate-100 space-y-6 w-full max-w-md relative animate-fadeIn">
+            <button onclick="closeNewPropertyModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-lg">✕</button>
+            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Register Location</h2>
+            <form onsubmit="submitNewProperty(event)" class="space-y-4">
+                <input type="text" id="prop-name-input" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 text-sm" placeholder="Property Address" />
+                <input type="email" id="prop-email-input" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 text-sm" placeholder="Notification Email" />
+                <button type="submit" class="w-full bg-[#0085d1] hover:bg-[#0074b7] text-white font-semibold py-3.5 rounded-xl transition-all text-sm tracking-wide shadow-sm">
+                    Add Property Location
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-property-workspace" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-8 rounded-[28px] shadow-2xl border border-slate-100 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative animate-fadeIn">
+            <button onclick="closePropertyWorkspaceModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+            
+            <div class="border-b border-slate-100 pb-4 mb-6">
+                <h3 id="modal-workspace-title" class="text-2xl font-black text-slate-800 tracking-tight">Property Title</h3>
+                <p id="modal-workspace-subtitle" class="text-sm text-slate-400 mt-0.5">Route Configuration</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Create New Task</h4>
+                    <form id="modal-task-form" class="space-y-4">
+                        <input type="text" id="w-modal-location" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 text-sm" placeholder="Key Asset Location / Vault" />
+                        <input type="date" id="w-modal-date" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 text-sm" />
+                        
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-slate-400 tracking-wider uppercase">Assign Personnel</label>
+                            <div class="flex flex-wrap gap-2 pt-1" id="modal-checkbox-matrix-staff">
+                                </div>
+                        </div>
+
+                        <textarea id="w-modal-notes" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 text-sm h-20 resize-none" placeholder="Initial Note..."></textarea>
+                        <button type="submit" class="w-full bg-[#0085d1] hover:bg-[#0074b7] text-white font-semibold py-3.5 rounded-xl text-sm shadow-sm transition-all tracking-wide">
+                            Create Task
+                        </button>
+                    </form>
+                </div>
+
+                <div class="flex flex-col justify-between space-y-4">
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Permanent Property History manifest</h4>
+                        <div class="space-y-2 max-h-72 overflow-y-auto pr-1" id="modal-workspace-history-logs">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Core Reactive Storage Controllers with LocalStorage Fail-safes
+        // System Reactive State LocalStorage Registers
         let properties = JSON.parse(localStorage.getItem('hub_properties')) || [
             { id: 1, name: "Oakwood Apartments, Apt 4B", landlordEmail: "landlord1@example.com", tasks: [] },
             { id: 2, name: "Maple Street House, No. 12", landlordEmail: "landlord2@example.com", tasks: [] }
         ];
         let employees = JSON.parse(localStorage.getItem('hub_employees')) || ["Issac", "Shea", "David"];
         let archivedTasks = JSON.parse(localStorage.getItem('hub_archive')) || [];
-        let selectedPropertyId = null;
+        let contextActivePropertyId = null;
 
         function persistData() {
             localStorage.setItem('hub_properties', JSON.stringify(properties));
@@ -196,7 +232,7 @@
             localStorage.setItem('hub_archive', JSON.stringify(archivedTasks));
         }
 
-        // Navigation Engine
+        // Global Tab Navigation
         function switchTab(tabId) {
             ['dashboard', 'properties', 'tasks', 'archive', 'settings'].forEach(tab => {
                 document.getElementById(`page-${tab}`).classList.add('hidden');
@@ -207,12 +243,11 @@
             
             if(tabId === 'dashboard') updateDashboardMetrics();
             if(tabId === 'properties') renderPropertiesRegistry();
-            if(tabId === 'tasks') renderTaskProperties();
+            if(tabId === 'tasks') renderLiveTasksWorkspace();
             if(tabId === 'archive') renderArchiveLedger();
             if(tabId === 'settings') { renderStaffSettings(); loadConfigInputs(); }
         }
 
-        // Metrics Processor
         function updateDashboardMetrics() {
             document.getElementById('dash-total-properties').innerText = properties.length;
             document.getElementById('dash-total-staff').innerText = employees.length;
@@ -225,24 +260,132 @@
             document.getElementById('dash-pending-tasks').innerText = totalPending;
         }
 
-        // Properties Logic Registry
+        // Render Clean List View Table
         function renderPropertiesRegistry() {
-            const body = document.getElementById('portfolio-table-body');
-            body.innerHTML = '';
+            const tbody = document.getElementById('portfolio-table-rows');
+            tbody.innerHTML = '';
+
             if(properties.length === 0) {
-                body.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-slate-400 italic">No registered assets.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 italic">No business assets found in catalog registry.</td></tr>`;
                 return;
             }
-            properties.forEach((p, idx) => {
+
+            properties.forEach(prop => {
+                const pendingCount = prop.tasks.filter(t => t.status === 'Pending').length;
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/50 transition-colors";
+                tr.className = "hover:bg-slate-50/70 transition-colors cursor-pointer";
+                // Entire row click drops configuration layout workspace popup
+                tr.onclick = (e) => {
+                    if(e.target.tagName === 'BUTTON') return;
+                    openPropertyWorkspaceModal(prop.id);
+                };
+
                 tr.innerHTML = `
-                    <td class="p-4 font-semibold text-slate-800">${p.name}</td>
-                    <td class="p-4 text-slate-500">${p.landlordEmail}</td>
-                    <td class="p-4 text-right"><button onclick="removeProperty(${idx})" class="text-rose-500 hover:text-rose-700 text-xs font-bold tracking-wide uppercase">Delete</button></td>
+                    <td class="p-4 pl-6 font-bold text-slate-800 text-base tracking-tight">${prop.name}</td>
+                    <td class="p-4 text-slate-500 text-sm">${prop.landlordEmail}</td>
+                    <td class="p-4 text-center">
+                        <span class="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider ${pendingCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-400'}">
+                            ${pendingCount} Open
+                        </span>
+                    </td>
+                    <td class="p-4 text-right pr-6">
+                        <button onclick="deleteProperty(${prop.id})" class="text-slate-300 hover:text-rose-500 text-xs font-bold tracking-wide uppercase transition-colors">Delete</button>
+                    </td>
                 `;
-                body.appendChild(tr);
+                tbody.appendChild(tr);
             });
+        }
+
+        // Modal Controllers Engine
+        function openNewPropertyModal() { document.getElementById('modal-new-property').classList.remove('hidden'); }
+        function closeNewPropertyModal() { document.getElementById('modal-new-property').classList.add('hidden'); }
+
+        function openPropertyWorkspaceModal(propertyId) {
+            contextActivePropertyId = propertyId;
+            const prop = properties.find(p => p.id === propertyId);
+            if(!prop) return;
+
+            document.getElementById('modal-workspace-title').innerText = prop.name;
+            document.getElementById('modal-workspace-subtitle').innerText = `Notifications Dest: ${prop.landlordEmail}`;
+
+            // Generate personnel checkbox matrix inside the workspace modal view instance
+            const checkContainer = document.getElementById('modal-checkbox-matrix-staff');
+            checkContainer.innerHTML = '';
+            employees.forEach(emp => {
+                checkContainer.innerHTML += `
+                    <label class="inline-flex items-center gap-2 cursor-pointer bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100/70 transition-colors">
+                        <input type="checkbox" name="modal-emp-selection" value="${emp}" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 border-slate-300" />
+                        <span class="text-sm text-slate-700 font-medium">${emp}</span>
+                    </label>
+                `;
+            });
+
+            // Re-render permanent timeline log
+            renderModalPropertyLogs(prop);
+
+            // Bind workspace creation form submission event pipeline handler
+            const form = document.getElementById('modal-task-form');
+            form.onsubmit = (e) => executeModalTaskGeneration(e, propertyId);
+
+            document.getElementById('modal-property-workspace').classList.remove('hidden');
+        }
+
+        function closePropertyWorkspaceModal() {
+            document.getElementById('modal-property-workspace').classList.add('hidden');
+            document.getElementById('modal-task-form').reset();
+            contextActivePropertyId = null;
+            renderPropertiesRegistry();
+        }
+
+        function renderModalPropertyLogs(prop) {
+            const logsContainer = document.getElementById('modal-workspace-history-logs');
+            logsContainer.innerHTML = '';
+
+            if(prop.tasks.length === 0) {
+                logsContainer.innerHTML = `<p class="text-sm text-slate-400 italic py-4">No tasks tracked historical for this location catalog profile.</p>`;
+                return;
+            }
+
+            prop.tasks.forEach(t => {
+                const statusColor = t.status === 'Collected' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-amber-50 text-amber-700 border-amber-100';
+                logsContainer.innerHTML += `
+                    <div class="flex flex-col justify-between text-xs p-3.5 border border-slate-100 rounded-xl bg-slate-50/50 space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-800 text-sm">🔑 Key Transfer Action</span>
+                            <span class="px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase tracking-wider ${statusColor}">${t.status}</span>
+                        </div>
+                        <p class="text-slate-500 text-xs">📍 Location/Vault: <strong class="text-slate-700">${t.currentLocation}</strong> | Assignee: <strong class="text-slate-700">${t.assignedEmployee}</strong></p>
+                        ${t.notes ? `<p class="text-[11px] bg-white border border-slate-100 px-2.5 py-1 rounded-md text-slate-500 mt-1 italic">Note: ${t.notes}</p>` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        function executeModalTaskGeneration(e, propertyId) {
+            e.preventDefault();
+            const prop = properties.find(p => p.id === propertyId);
+
+            const checkedBoxes = document.querySelectorAll('input[name="modal-emp-selection"]:checked');
+            const selectedStaff = Array.from(checkedBoxes).map(cb => cb.value);
+
+            if(selectedStaff.length === 0) {
+                alert("Please select at least one assigned personnel member.");
+                return;
+            }
+
+            prop.tasks.push({
+                id: Date.now(),
+                currentLocation: document.getElementById('w-modal-location').value.trim(),
+                scheduledDateTime: document.getElementById('w-modal-date').value,
+                assignedEmployee: selectedStaff.join(', '),
+                notes: document.getElementById('w-modal-notes').value.trim(),
+                status: 'Pending'
+            });
+
+            persistData();
+            renderModalPropertyLogs(prop);
+            document.getElementById('modal-task-form').reset();
+            alert("Task dynamically deployed into Task Center pipeline!");
         }
 
         function submitNewProperty(e) {
@@ -250,198 +393,105 @@
             const nameIn = document.getElementById('prop-name-input');
             const emailIn = document.getElementById('prop-email-input');
             
-            properties.push({
-                id: Date.now(),
-                name: nameIn.value.trim(),
-                landlordEmail: emailIn.value.trim(),
-                tasks: []
-            });
+            properties.push({ id: Date.now(), name: nameIn.value.trim(), landlordEmail: emailIn.value.trim(), tasks: [] });
+            nameIn.value = ''; emailIn.value = '';
             
-            nameIn.value = '';
-            emailIn.value = '';
             persistData();
+            closeNewPropertyModal();
             renderPropertiesRegistry();
         }
 
-        function removeProperty(index) {
-            properties.splice(index, 1);
-            persistData();
-            renderPropertiesRegistry();
-        }
-
-        // Task Form Setup & Redesign matching reference spec
-        function renderTaskProperties() {
-            const container = document.getElementById('task-property-list');
-            container.innerHTML = '';
-            properties.forEach(p => {
-                const activeCount = p.tasks.filter(t => t.status === 'Pending').length;
-                const activeSelection = p.id === selectedPropertyId;
-                const card = document.createElement('div');
-                card.className = `p-4 border rounded-xl cursor-pointer transition-all ${activeSelection ? 'bg-blue-50/60 border-blue-400 shadow-sm' : 'bg-white hover:bg-slate-50/50 border-slate-100'}`;
-                card.onclick = () => { selectedPropertyId = p.id; renderTaskProperties(); renderTaskWorkspace(); };
-                card.innerHTML = `
-                    <h4 class="font-bold text-slate-800 text-sm tracking-tight">${p.name}</h4>
-                    <span class="inline-block mt-2 text-[11px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-md ${activeCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500'}">
-                        ${activeCount} Pending
-                    </span>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function renderTaskWorkspace() {
-            const workspace = document.getElementById('task-workspace');
-            const property = properties.find(p => p.id === selectedPropertyId);
-            if (!property) return;
-
-            // Render modern user checkbox matrix exactly matching your reference upload view
-            let employeeCheckboxMatrix = '';
-            employees.forEach(emp => {
-                employeeCheckboxMatrix += `
-                    <label class="inline-flex items-center gap-2 cursor-pointer bg-slate-50 px-3 py-2 rounded-xl border border-slate-100 hover:bg-slate-100/70 transition-colors">
-                        <input type="checkbox" name="w-employees" value="${emp}" class="rounded text-blue-600 focus:ring-blue-500 border-slate-300 w-4 h-4" />
-                        <span class="text-sm text-slate-700 font-medium">${emp}</span>
-                    </label>
-                `;
-            });
-
-            let tasksListHtml = '';
-            const pendingTasks = property.tasks.filter(t => t.status === 'Pending');
-
-            pendingTasks.forEach(task => {
-                tasksListHtml += `
-                    <div class="p-5 border border-slate-100 bg-slate-50/50 rounded-2xl flex justify-between items-center shadow-sm">
-                        <div>
-                            <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md">${task.status}</span>
-                            <h4 class="text-slate-800 font-bold mt-1.5 text-base">🔑 Key Transfer Action</h4>
-                            <p class="text-xs text-slate-500 mt-1">📍 Depot: <strong class="text-slate-700">${task.currentLocation}</strong> | 👤 Assigned: <strong class="text-slate-700">${task.assignedEmployee}</strong></p>
-                            <p class="text-xs text-slate-400 mt-0.5">📅 Due Target: ${task.scheduledDateTime}</p>
-                        </div>
-                        <button id="btn-${task.id}" onclick="dispatchKeyAction(${property.id}, ${task.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm">
-                            Confirm Collection
-                        </button>
-                    </div>
-                `;
-            });
-
-            // Master form matching your UI style wrapper architecture
-            workspace.innerHTML = `
-                <div class="space-y-8 max-w-lg mx-auto">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">${property.name}</h2>
-                        <p class="text-sm text-slate-400 mt-0.5">Notifications: ${property.landlordEmail}</p>
-                    </div>
-
-                    <div class="space-y-3">
-                        <h3 class="text-xs font-bold tracking-widest uppercase text-slate-400">Active Workflow</h3>
-                        ${pendingTasks.length === 0 ? '<p class="text-slate-400 italic text-sm py-2">No active tasks pending completion.</p>' : `<div class="space-y-3">${tasksListHtml}</div>`}
-                    </div>
-
-                    <div class="border-t border-slate-100 pt-6 space-y-5">
-                        <h3 class="text-xl font-bold text-slate-800 tracking-tight">Create New Task</h3>
-                        <form onsubmit="submitTaskWorkflow(event, ${property.id})" class="space-y-4">
-                            <div>
-                                <input type="text" id="w-location" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 placeholder-slate-400 outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" placeholder="Property Address / Location" />
-                            </div>
-                            <div>
-                                <input type="date" id="w-date" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 placeholder-slate-400 outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm" />
-                            </div>
-                            <div class="space-y-2">
-                                <label class="block text-xs font-bold text-slate-400 tracking-wider uppercase">Assign Personnel</label>
-                                <div class="flex flex-wrap gap-2 pt-1">
-                                    ${employeeCheckboxMatrix}
-                                </div>
-                            </div>
-                            <div>
-                                <textarea id="w-notes" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm h-24 resize-none" placeholder="Initial Note..."></textarea>
-                            </div>
-                            <button type="submit" class="w-full bg-[#0085d1] hover:bg-[#0074b7] text-white font-semibold py-3.5 rounded-xl transition-all text-sm shadow-sm tracking-wide mt-2">
-                                Create
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            `;
-        }
-
-        function submitTaskWorkflow(e, propertyId) {
-            e.preventDefault();
-            const property = properties.find(p => p.id === propertyId);
-            
-            // Extract values from checked list
-            const checkedBoxes = document.querySelectorAll('input[name="w-employees"]:checked');
-            const targetEmployees = Array.from(checkedBoxes).map(cb => cb.value);
-
-            if(targetEmployees.length === 0) {
-                alert("Please select at least one personnel option.");
-                return;
+        function deleteProperty(id) {
+            if(confirm("Confirm asset removal from database portfolio?")) {
+                properties = properties.filter(p => p.id !== id);
+                persistData();
+                renderPropertiesRegistry();
             }
-
-            property.tasks.push({
-                id: Date.now(),
-                type: 'Key Collection',
-                currentLocation: document.getElementById('w-location').value,
-                assignedEmployee: targetEmployees.join(', '),
-                scheduledDateTime: document.getElementById('w-date').value,
-                notes: document.getElementById('w-notes').value,
-                status: 'Pending'
-            });
-
-            persistData();
-            renderTaskWorkspace();
         }
 
-        function dispatchKeyAction(propertyId, taskId) {
-            const property = properties.find(p => p.id === propertyId);
-            const taskIndex = property.tasks.findIndex(t => t.id === taskId);
-            const task = property.tasks[taskIndex];
+        // Live Workspace Task Center Pipeline View
+        function renderLiveTasksWorkspace() {
+            const container = document.getElementById('live-tasks-workspace-container');
+            container.innerHTML = '';
+            let hasActiveTasks = false;
+
+            properties.forEach(prop => {
+                prop.tasks.forEach(task => {
+                    if(task.status === 'Pending') {
+                        hasActiveTasks = true;
+                        const row = document.createElement('div');
+                        row.className = "p-5 border border-slate-100 bg-slate-50/70 rounded-2xl flex flex-col sm:flex-row justify-between sm:items-center gap-4 transition-all hover:bg-slate-50";
+                        row.innerHTML = `
+                            <div>
+                                <span class="bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md">Live Task</span>
+                                <h3 class="text-slate-800 font-extrabold text-base mt-2 tracking-tight">${prop.name}</h3>
+                                <p class="text-xs text-slate-500 mt-1">📍 Depot Location: <strong class="text-slate-700">${task.currentLocation}</strong> | 👤 Courier: <strong class="text-slate-700">${task.assignedEmployee}</strong></p>
+                                ${task.notes ? `<p class="text-xs bg-white text-slate-600 italic px-3 py-1.5 rounded-lg border border-slate-100 mt-2 max-w-xl">Note: ${task.notes}</p>` : ''}
+                                <p class="text-[11px] text-slate-400 mt-2">📅 Schedule Horizon: ${task.scheduledDateTime}</p>
+                            </div>
+                            <button id="btn-${task.id}" onclick="executeCollectionEvent(${prop.id}, ${task.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 px-5 rounded-xl h-fit shadow-sm whitespace-nowrap transition-colors">
+                                Confirm Collection
+                            </button>
+                        `;
+                        container.appendChild(row);
+                    }
+                });
+            });
+
+            if(!hasActiveTasks) {
+                container.innerHTML = `<div class="text-center text-slate-400 py-12 italic">🎉 Operational pipeline completely clear. No tasks pending execution!</div>`;
+            }
+        }
+
+        // Lifecycle Movement Dispatches
+        function executeCollectionEvent(propId, taskId) {
+            const prop = properties.find(p => p.id === propId);
+            const task = prop.tasks.find(t => t.id === taskId);
             const btn = document.getElementById(`btn-${taskId}`);
 
-            const pubKey = localStorage.getItem('cfg_pub') || '';
-            const srvId = localStorage.getItem('cfg_srv') || '';
-            const tplId = localStorage.getItem('cfg_tpl') || '';
+            const pubKey = localStorage.getItem('hub_pub') || '';
+            const srvId = localStorage.getItem('hub_srv') || '';
+            const tplId = localStorage.getItem('hub_tpl') || '';
 
-            if (btn) { btn.innerText = "⏳ Archiving..."; btn.disabled = true; }
+            if (btn) { btn.innerText = "⏳ Dispatching..."; btn.disabled = true; }
 
-            const archiveHandler = () => {
+            const finalizeWorkflowTransition = () => {
                 task.status = 'Collected';
-                task.propertyName = property.name;
-                task.archivedAt = new Date().toLocaleDateString();
-                
-                archivedTasks.push(task);
-                property.tasks.splice(taskIndex, 1);
-                
+                archivedTasks.push({
+                    ...task,
+                    propertyName: prop.name,
+                    archivedAt: new Date().toLocaleDateString()
+                });
                 persistData();
-                renderTaskWorkspace();
-                renderTaskProperties();
+                renderLiveTasksWorkspace();
             };
 
             if (!pubKey || !srvId || !tplId) {
-                archiveHandler();
+                finalizeWorkflowTransition();
                 return;
             }
 
             emailjs.init(pubKey);
             emailjs.send(srvId, tplId, {
-                to_email: property.landlordEmail,
-                property_name: property.name,
+                to_email: prop.landlordEmail,
+                property_name: prop.name,
                 employee_name: task.assignedEmployee,
                 location: task.currentLocation,
                 date_time: task.scheduledDateTime
             }).then(() => {
-                archiveHandler();
+                finalizeWorkflowTransition();
             }).catch(err => {
                 console.error(err);
-                archiveHandler(); // Fail-safe to ensure task is never frozen on network error
+                finalizeWorkflowTransition();
             });
         }
 
-        // Archive Engine UI
+        // Archive Output Presentation Display
         function renderArchiveLedger() {
             const body = document.getElementById('archive-table-body');
             body.innerHTML = '';
             if(archivedTasks.length === 0) {
-                body.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 italic">No historical entries in ledger inventory.</td></tr>`;
+                body.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 italic">No historical archive logs recorded yet.</td></tr>`;
                 return;
             }
             archivedTasks.forEach(t => {
@@ -452,20 +502,16 @@
                     <td class="p-4 text-slate-600">${t.currentLocation}</td>
                     <td class="p-4 text-slate-600">${t.assignedEmployee}</td>
                     <td class="p-4 text-slate-400">${t.archivedAt}</td>
-                    <td class="p-4 text-right"><span class="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md font-bold text-[10px] uppercase tracking-wider">Archived</span></td>
+                    <td class="p-4 text-right"><span class="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md font-bold text-[10px] uppercase tracking-wider">Collected</span></td>
                 `;
                 body.appendChild(tr);
             });
         }
 
-        // Settings Directory Persistence
+        // Settings Personnel List Processing Controls
         function renderStaffSettings() {
             const list = document.getElementById('settings-staff-list');
             list.innerHTML = '';
-            if(employees.length === 0) {
-                list.innerHTML = `<p class="p-4 text-sm text-slate-400 italic">No personnel initialized.</p>`;
-                return;
-            }
             employees.forEach((employee, index) => {
                 const row = document.createElement('div');
                 row.className = "flex justify-between items-center p-3.5 text-slate-700 text-sm hover:bg-slate-50/50";
@@ -477,36 +523,25 @@
         function addStaffMember(e) {
             e.preventDefault();
             const input = document.getElementById('staff-name-input');
-            if(input.value.trim()) { 
-                employees.push(input.value.trim()); 
-                input.value = ''; 
-                persistData();
-                renderStaffSettings(); 
-            }
+            if(input.value.trim()) { employees.push(input.value.trim()); input.value = ''; persistData(); renderStaffSettings(); }
         }
 
-        function removeStaffMember(index) { 
-            employees.splice(index, 1); 
-            persistData();
-            renderStaffSettings(); 
-        }
+        function removeStaffMember(index) { employees.splice(index, 1); persistData(); renderStaffSettings(); }
 
-        // System Config Helpers
         function saveConfig() {
-            localStorage.setItem('cfg_pub', document.getElementById('cfg-public-key').value.trim());
-            localStorage.setItem('cfg_srv', document.getElementById('cfg-service-id').value.trim());
-            localStorage.setItem('cfg_tpl', document.getElementById('cfg-template-id').value.trim());
+            localStorage.setItem('hub_pub', document.getElementById('cfg-public-key').value.trim());
+            localStorage.setItem('hub_srv', document.getElementById('cfg-service-id').value.trim());
+            localStorage.setItem('hub_tpl', document.getElementById('cfg-template-id').value.trim());
         }
 
         function loadConfigInputs() {
-            document.getElementById('cfg-public-key').value = localStorage.getItem('cfg_pub') || '';
-            document.getElementById('cfg-service-id').value = localStorage.getItem('cfg_srv') || '';
-            document.getElementById('cfg-template-id').value = localStorage.getItem('cfg_tpl') || '';
+            document.getElementById('cfg-public-key').value = localStorage.getItem('hub_pub') || '';
+            document.getElementById('cfg-service-id').value = localStorage.getItem('hub_srv') || '';
+            document.getElementById('cfg-template-id').value = localStorage.getItem('hub_tpl') || '';
         }
 
-        // Bootstrap
+        // Setup Application Run
         updateDashboardMetrics();
     </script>
 </body>
 </html>
-</html
