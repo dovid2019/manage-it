@@ -8,244 +8,386 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
-<body class="bg-[#f0f2f5] font-sans antialiased flex min-h-screen">
+<body class="bg-[#f0f2f5] font-sans antialiased text-slate-800 min-h-screen flex flex-col">
 
-    <aside class="w-64 bg-slate-900 text-white p-5 space-y-6 flex flex-col shadow-xl">
-        <div class="text-xl font-bold border-b border-slate-800 pb-4 tracking-wide flex items-center gap-2">
-            🏢 <span class="text-blue-400">Property Hub</span>
-        </div>
-        <nav class="space-y-1.5 flex-1">
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 bg-blue-600 font-medium shadow-md shadow-blue-600/20">
-                📊 Dashboard
-            </button>
-            <button onclick="switchTab('properties')" id="nav-properties" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white">
-                🏢 Portfolio Registry
-            </button>
-            <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white">
-                📋 Task Center
-            </button>
-            <button onclick="switchTab('archive')" id="nav-archive" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white">
-                🗄️ Task Archive
-            </button>
-            <button onclick="switchTab('settings')" id="nav-settings" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white">
-                ⚙️ Settings
-            </button>
-        </nav>
-    </aside>
-
-    <main class="flex-1 p-8 md:p-12 overflow-y-auto max-w-7xl">
-        
-        <section id="page-dashboard" class="space-y-8">
-            <header>
-                <h1 class="text-3xl font-bold text-slate-800">Portfolio Dashboard</h1>
-                <p class="text-slate-500 mt-1">Overview of active business properties and operations metrics.</p>
-            </header>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Total Locations</span>
-                    <h3 class="text-3xl font-extrabold text-slate-800 mt-2" id="dash-total-properties">0</h3>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Active Live Tasks</span>
-                    <h3 class="text-3xl font-extrabold text-amber-500 mt-2" id="dash-pending-tasks">0</h3>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Archived Actions</span>
-                    <h3 class="text-3xl font-extrabold text-emerald-500 mt-2" id="dash-archived-tasks">0</h3>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Registered Users</span>
-                    <h3 class="text-3xl font-extrabold text-blue-500 mt-2" id="dash-total-staff">0</h3>
-                </div>
+    <div id="auth-screen" class="fixed inset-0 bg-slate-900 flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-8 rounded-[28px] shadow-2xl max-w-md w-full space-y-6 text-center animate-fadeIn">
+            <div>
+                <span class="text-4xl">🏢</span>
+                <h2 class="text-2xl font-black text-slate-900 mt-2 tracking-tight">System Access Gateway</h2>
+                <p class="text-slate-400 text-sm mt-1">Provide credentials to sync your property data matrix.</p>
             </div>
-        </section>
-
-        <section id="page-properties" class="hidden space-y-8">
-            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                <header>
-                    <h1 class="text-3xl font-bold text-slate-800">Portfolio Registry</h1>
-                    <p class="text-slate-500 mt-1">Select any property location row below to assign tasks or view permanent logs.</p>
-                </header>
-                <button onclick="openNewPropertyModal()" class="bg-[#0085d1] hover:bg-[#0074b7] text-white font-semibold px-5 py-3 rounded-xl text-sm tracking-wide shadow-sm transition-colors h-fit whitespace-nowrap">
-                    ➕ Add New Property
-                </button>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm border-collapse">
-                        <thead>
-                            <tr class="border-b border-slate-100 bg-slate-50/70 text-slate-400 font-semibold uppercase text-xs">
-                                <th class="p-4 pl-6">Business Location / Address</th>
-                                <th class="p-4">Notification Path</th>
-                                <th class="p-4 text-center">Active Workflows</th>
-                                <th class="p-4 text-right pr-6">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="portfolio-table-rows" class="divide-y divide-slate-100 text-slate-700">
-                            </tbody>
-                    </table>
+            <form onsubmit="handleAuthSubmit(event)" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Email Address</label>
+                    <input type="email" id="auth-email" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:border-blue-500 outline-none transition-all" placeholder="name@business.com">
                 </div>
-            </div>
-        </section>
-
-        <section id="page-tasks" class="hidden space-y-8">
-            <header>
-                <h1 class="text-3xl font-bold text-slate-800">Operational Task Center</h1>
-                <p class="text-slate-500 mt-1">Live workspace showing current outstanding actions across properties.</p>
-            </header>
-            <div class="bg-white p-8 rounded-[28px] shadow-sm border border-slate-100">
-                <div class="space-y-4" id="live-tasks-workspace-container">
-                    </div>
-            </div>
-        </section>
-
-        <section id="page-archive" class="hidden space-y-8">
-            <header>
-                <h1 class="text-3xl font-bold text-slate-800">Task Archive Ledger</h1>
-                <p class="text-slate-500 mt-1">Completed distribution histories and locked records logs.</p>
-            </header>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm border-collapse">
-                        <thead>
-                            <tr class="border-b border-slate-100 bg-slate-50/70 text-slate-400 font-semibold uppercase text-xs">
-                                <th class="p-4 rounded-l-xl">Location Unit</th>
-                                <th class="p-4">Vault Location</th>
-                                <th class="p-4">Personnel</th>
-                                <th class="p-4">Completed Horizon</th>
-                                <th class="p-4 text-right rounded-r-xl">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="archive-table-body" class="divide-y divide-slate-50 text-slate-700"></tbody>
-                    </table>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Security Password</label>
+                    <input type="password" id="auth-password" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm focus:border-blue-500 outline-none transition-all" placeholder="••••••••">
                 </div>
-            </div>
-        </section>
-
-        <section id="page-settings" class="hidden space-y-8">
-            <header>
-                <h1 class="text-3xl font-bold text-slate-800">System Configurations</h1>
-                <p class="text-slate-500 mt-1">Manage personnel profiles and notification gateways configurations.</p>
-            </header>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-white p-8 rounded-[28px] shadow-sm border border-slate-100 space-y-5">
-                    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Personnel Directory</h2>
-                    <form onsubmit="addStaffMember(event)" class="flex gap-2">
-                        <input type="text" id="staff-name-input" required class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 text-sm" placeholder="New employee full name" />
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 rounded-xl font-medium transition-colors text-sm shadow-sm">Add</button>
-                    </form>
-                    <div class="divide-y divide-slate-100 border border-slate-100 rounded-xl max-h-64 overflow-y-auto bg-slate-50/30" id="settings-staff-list"></div>
-                </div>
-
-                <div class="bg-white p-8 rounded-[28px] shadow-sm border border-slate-100 space-y-4">
-                    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Messaging Infrastructure</h2>
-                    <div class="space-y-4 text-sm">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Public Key</label>
-                            <input type="text" id="cfg-public-key" oninput="saveConfig()" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 outline-none focus:border-blue-500" placeholder="Paste Public Key" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Service ID</label>
-                            <input type="text" id="cfg-service-id" oninput="saveConfig()" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 outline-none focus:border-blue-500" placeholder="Paste Service ID" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Template ID</label>
-                            <input type="text" id="cfg-template-id" oninput="saveConfig()" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 outline-none focus:border-blue-500" placeholder="Paste Template ID" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <div id="modal-new-property" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-8 rounded-[28px] shadow-2xl border border-slate-100 space-y-6 w-full max-w-md relative animate-fadeIn">
-            <button onclick="closeNewPropertyModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-lg">✕</button>
-            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Register Location</h2>
-            <form onsubmit="submitNewProperty(event)" class="space-y-4">
-                <input type="text" id="prop-name-input" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 text-sm" placeholder="Property Address" />
-                <input type="email" id="prop-email-input" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 text-sm" placeholder="Notification Email" />
-                <button type="submit" class="w-full bg-[#0085d1] hover:bg-[#0074b7] text-white font-semibold py-3.5 rounded-xl transition-all text-sm tracking-wide shadow-sm">
-                    Add Property Location
+                <button type="submit" class="w-full bg-[#0085d1] hover:bg-[#0074b7] text-white font-bold py-3.5 rounded-xl text-sm tracking-wide transition-all shadow-sm">
+                    Authenticate Account
                 </button>
             </form>
         </div>
     </div>
 
+    <div id="pin-screen" class="fixed inset-0 bg-slate-950 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white p-8 rounded-[28px] shadow-2xl max-w-sm w-full space-y-6 text-center animate-fadeIn">
+            <div>
+                <span class="text-4xl">🔑</span>
+                <h2 class="text-2xl font-black text-slate-900 mt-2 tracking-tight">Identity Verification</h2>
+                <p class="text-slate-400 text-sm mt-1" id="pin-screen-prompt">Select profile and input secure identity PIN.</p>
+            </div>
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Personnel Profile</label>
+                    <select id="pin-user-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Secure PIN Code</label>
+                    <input type="password" id="pin-input" maxlength="4" placeholder="••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-widest focus:border-blue-500 outline-none">
+                </div>
+                <button onclick="verifyPersonnelPin()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm tracking-wide transition-all shadow-sm">
+                    Verify Identity
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-wrapper" class="flex flex-1 hidden">
+        
+        <aside class="w-64 bg-slate-900 text-white p-5 space-y-6 flex flex-col shadow-xl shrink-0">
+            <div class="border-b border-slate-800 pb-4 tracking-wide flex flex-col gap-1">
+                <div class="text-xl font-bold flex items-center gap-2">🏢 <span class="text-blue-400">Property Hub</span></div>
+                <div id="user-badge" class="text-[11px] font-semibold text-slate-400 bg-slate-800/60 px-2 py-1 rounded-md mt-2 w-fit">Profile: Loading...</div>
+            </div>
+            <nav class="space-y-1.5 flex-1">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 bg-blue-600 font-medium text-white">📊 Dashboard</button>
+                <button onclick="switchTab('properties')" id="nav-properties" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium">🏢 Portfolio Registry</button>
+                <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium">📋 Task Center</button>
+                <button onclick="switchTab('archive')" id="nav-archive" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium">🗄️ Task Archive</button>
+                <button onclick="switchTab('settings')" id="nav-settings" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium hidden">⚙️ Settings</button>
+            </nav>
+            <button onclick="logoutSession()" class="w-full text-left px-4 py-3 rounded-xl text-rose-400 hover:bg-rose-950/30 font-medium text-sm mt-auto">🚪 Terminate Session</button>
+        </aside>
+
+        <main class="flex-1 p-8 md:p-12 overflow-y-auto max-w-7xl mx-auto w-full">
+            
+            <section id="page-dashboard" class="space-y-8 animate-fadeIn">
+                <header>
+                    <h1 class="text-3xl font-bold text-slate-800">Portfolio Dashboard</h1>
+                    <p class="text-slate-500 mt-1">Cross-device synchronized operations tracking room matrix.</p>
+                </header>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                        <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Total Locations</span>
+                        <h3 class="text-3xl font-extrabold text-slate-800 mt-2" id="dash-total-properties">0</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                        <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Active Actions</span>
+                        <h3 class="text-3xl font-extrabold text-amber-500 mt-2" id="dash-pending-tasks">0</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                        <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Archived Actions</span>
+                        <h3 class="text-3xl font-extrabold text-emerald-500 mt-2" id="dash-archived-tasks">0</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                        <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase">System Operators</span>
+                        <h3 class="text-3xl font-extrabold text-blue-500 mt-2" id="dash-total-staff">0</h3>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-properties" class="hidden space-y-8 animate-fadeIn">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <header>
+                        <h1 class="text-3xl font-bold text-slate-800">Portfolio Registry</h1>
+                        <p class="text-slate-500 mt-1">Select location records entry to configure task engines, handle parameters, or view asset logs.</p>
+                    </header>
+                    <button onclick="openNewPropertyModal()" class="bg-[#0085d1] hover:bg-[#0074b7] text-white font-semibold px-5 py-3 rounded-xl text-sm shadow-sm transition-colors whitespace-nowrap">
+                        ➕ Add New Property Asset
+                    </button>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-100 bg-slate-50/70 text-slate-400 font-semibold uppercase text-xs">
+                                    <th class="p-4 pl-6">Property Location Address</th>
+                                    <th class="p-4">Postcode / Town</th>
+                                    <th class="p-4">Landlord Profile Contact Details</th>
+                                    <th class="p-4 text-center">Open Actions</th>
+                                    <th class="p-4 text-right pr-6">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="portfolio-table-rows" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-tasks" class="hidden space-y-8 animate-fadeIn">
+                <header>
+                    <h1 class="text-3xl font-bold text-slate-800">Operational Task Center</h1>
+                    <p class="text-slate-500 mt-1">Live critical operational requirements checklist.</p>
+                </header>
+                <div class="bg-white p-8 rounded-[28px] border border-slate-100 shadow-sm space-y-6">
+                    <div class="space-y-4" id="live-tasks-workspace-container"></div>
+                </div>
+            </section>
+
+            <section id="page-archive" class="hidden space-y-8 animate-fadeIn">
+                <header>
+                    <h1 class="text-3xl font-bold text-slate-800">Task Archive Ledger</h1>
+                    <p class="text-slate-500 mt-1">Historical verification timeline logs of finalized workflows.</p>
+                </header>
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-100 bg-slate-50/70 text-slate-400 font-semibold uppercase text-xs">
+                                    <th class="p-4 pl-6">Location Unit</th>
+                                    <th class="p-4">Task Manifest Classification</th>
+                                    <th class="p-4">Personnel Log</th>
+                                    <th class="p-4">Closed Timestamp</th>
+                                    <th class="p-4 text-right pr-6">Status Ledger</th>
+                                </tr>
+                            </thead>
+                            <tbody id="archive-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-settings" class="hidden space-y-8 animate-fadeIn">
+                <header>
+                    <h1 class="text-3xl font-bold text-slate-800">System Configurations Panel</h1>
+                    <p class="text-slate-500 mt-1">Manage infrastructure, worker records directories, verification pin logs, and distribution routing parameters.</p>
+                </header>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white p-8 rounded-[28px] border border-slate-100 shadow-sm space-y-5">
+                        <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Personnel Authorization Matrix</h2>
+                        <form onsubmit="addStaffMember(event)" class="space-y-3">
+                            <input type="text" id="staff-name-input" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none" placeholder="Full Name">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="password" id="staff-pin-input" required maxlength="4" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-center font-bold tracking-widest outline-none" placeholder="PIN (4 Digits)">
+                                <select id="staff-role-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none">
+                                    <option value="Operator">Operator Level</option>
+                                    <option value="Manager">Manager Level</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full bg-slate-900 text-white font-medium py-2 rounded-xl text-sm transition-colors shadow-sm">Provision User Profile</button>
+                        </form>
+                        <div class="divide-y divide-slate-100 border border-slate-100 rounded-xl max-h-64 overflow-y-auto bg-slate-50/30" id="settings-staff-list"></div>
+                    </div>
+                    <div class="bg-white p-8 rounded-[28px] border border-slate-100 shadow-sm space-y-4">
+                        <h2 class="text-2xl font-bold text-slate-800 tracking-tight">API Communications Hub</h2>
+                        <div class="space-y-4 text-sm">
+                            <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">EmailJS Public Token</label><input type="text" id="cfg-public-key" oninput="saveConfig()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 outline-none"></div>
+                            <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">EmailJS Service Identification</label><input type="text" id="cfg-service-id" oninput="saveConfig()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 outline-none"></div>
+                            <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">EmailJS Template Identification</label><input type="text" id="cfg-template-id" oninput="saveConfig()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 outline-none"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="modal-new-property" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-8 rounded-[28px] shadow-2xl border border-slate-100 space-y-6 w-full max-w-md relative animate-fadeIn max-h-[95vh] overflow-y-auto">
+            <button onclick="closeNewPropertyModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-lg">✕</button>
+            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Register Property Asset</h2>
+            <form onsubmit="submitNewProperty(event)" class="space-y-4 text-left">
+                <input type="text" id="p-form-name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Property Building Name / Street line">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" id="p-form-town" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Town / City">
+                    <input type="text" id="p-form-postcode" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Postcode">
+                </div>
+                <div class="border-t border-slate-100 pt-3 space-y-3">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Landlord Information Profiles</label>
+                    <input type="text" id="p-form-ll-name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Landlord Full Name">
+                    <input type="email" id="p-form-ll-email" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Landlord Route Email Inbox">
+                    <input type="tel" id="p-form-ll-phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Landlord Mobile Number">
+                </div>
+                <button type="submit" class="w-full bg-[#0085d1] hover:bg-[#0074b7] text-white font-bold py-3.5 rounded-xl text-sm shadow-sm transition-all">Write Record Matrix</button>
+            </form>
+        </div>
+    </div>
+
     <div id="modal-property-workspace" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-8 rounded-[28px] shadow-2xl border border-slate-100 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative animate-fadeIn">
+        <div class="bg-white p-8 rounded-[28px] shadow-2xl max-w-5xl w-full max-h-[92vh] overflow-y-auto relative animate-fadeIn">
             <button onclick="closePropertyWorkspaceModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
             
             <div class="border-b border-slate-100 pb-4 mb-6">
-                <h3 id="modal-workspace-title" class="text-2xl font-black text-slate-800 tracking-tight">Property Title</h3>
-                <p id="modal-workspace-subtitle" class="text-sm text-slate-400 mt-0.5">Route Configuration</p>
+                <h3 id="modal-workspace-title" class="text-2xl font-black text-slate-900 tracking-tight">Loading Asset Address Profile...</h3>
+                <p id="modal-workspace-subtitle" class="text-sm text-slate-400 mt-0.5">Parameters Specifications Tracker</p>
+                
+                <div class="flex gap-2 mt-4 border-t border-slate-100 pt-3">
+                    <button id="tab-btn-keys" onclick="switchModalSubTab('keys')" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide bg-slate-900 text-white">🔑 Key Asset Control</button>
+                    <button id="tab-btn-compliance" onclick="switchModalSubTab('compliance')" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide bg-slate-100 text-slate-600">🛡️ Statutory Compliance</button>
+                    <button id="tab-btn-media" onclick="switchModalSubTab('media')" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide bg-slate-100 text-slate-600">📸 Marketing Media Asset Storage</button>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div id="modal-subtab-keys" class="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fadeIn">
                 <div class="space-y-4">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Create New Task</h4>
-                    <form id="modal-task-form" class="space-y-4">
-                        <input type="text" id="w-modal-location" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 text-sm" placeholder="Key Asset Location / Vault" />
-                        <input type="date" id="w-modal-date" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 text-sm" />
-                        
-                        <div class="space-y-1.5">
-                            <label class="block text-xs font-bold text-slate-400 tracking-wider uppercase">Assign Personnel</label>
-                            <div class="flex flex-wrap gap-2 pt-1" id="modal-checkbox-matrix-staff">
-                                </div>
-                        </div>
-
-                        <textarea id="w-modal-notes" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 text-sm h-20 resize-none" placeholder="Initial Note..."></textarea>
-                        <button type="submit" class="w-full bg-[#0085d1] hover:bg-[#0074b7] text-white font-semibold py-3.5 rounded-xl text-sm shadow-sm transition-all tracking-wide">
-                            Create Task
-                        </button>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Spawn Key Distribution Workflow</h4>
+                    <form onsubmit="spawnKeyTask(event)" class="space-y-3">
+                        <input type="text" id="k-vault-address" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none" placeholder="Exact Key Holding Address (If external)">
+                        <input type="date" id="k-target-date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
+                        <div class="space-y-1"><label class="block text-xs font-bold text-slate-400 uppercase">Assigned Courier Profile</label><div class="flex flex-wrap gap-1.5" id="k-staff-matrix"></div></div>
+                        <textarea id="k-notes" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm h-16 resize-none" placeholder="Additional directions framework..."></textarea>
+                        <button type="submit" class="w-full bg-[#0085d1] text-white font-bold py-3 rounded-xl text-xs transition-colors shadow-sm">Dispatch Key Protocol</button>
                     </form>
                 </div>
-
-                <div class="flex flex-col justify-between space-y-4">
-                    <div>
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Permanent Property History manifest</h4>
-                        <div class="space-y-2 max-h-72 overflow-y-auto pr-1" id="modal-workspace-history-logs">
-                            </div>
-                    </div>
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Key Routing Records Timeline</h4>
+                    <div class="space-y-2 max-h-64 overflow-y-auto" id="k-history-logs"></div>
                 </div>
+            </div>
+
+            <div id="modal-subtab-compliance" class="grid grid-cols-1 md:grid-cols-2 gap-8 hidden animate-fadeIn">
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Statutory Registries Expiration Management</h4>
+                    <form onsubmit="saveComplianceRegistry(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div><label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">EPC Expiration Horizon</label><input type="date" id="c-epc-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none"></div>
+                            <div><label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">EICR Expiration Horizon</label><input type="date" id="c-eicr-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none"></div>
+                            <div><label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Gas Safe Certificate Horizon</label><input type="date" id="c-gas-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none"></div>
+                        </div>
+                        <div class="border-t border-slate-100 pt-3 space-y-2">
+                            <label class="block text-xs font-bold text-slate-400 uppercase">Custom Certification Unit Variant</label>
+                            <input type="text" id="c-custom-title" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none" placeholder="Certificate Classification Name (e.g., Fire Alarm)">
+                            <div><label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Custom Expiration Target Horizon</label><input type="date" id="c-custom-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none"></div>
+                        </div>
+                        <button type="submit" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl text-xs transition-colors shadow-sm">Save Compliance Framework</button>
+                    </form>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Compliance Overview</h4>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-3" id="compliance-status-summary-board"></div>
+                </div>
+            </div>
+
+            <div id="modal-subtab-media" class="space-y-6 hidden animate-fadeIn">
+                <div class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                    <span class="text-3xl">📸</span>
+                    <h4 class="text-sm font-bold text-slate-800 mt-2">Marketing Visual Media Upload Vault</h4>
+                    <p class="text-xs text-slate-400 mt-0.5">Select high-definition listing photography to host securely for reference.</p>
+                    <input type="file" id="media-file-input" accept="image/*" multiple onchange="simulateMediaVaultUpload(event)" class="hidden">
+                    <button onclick="document.getElementById('media-file-input').click()" class="mt-3 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold shadow-sm text-slate-700 hover:bg-slate-50">Choose Photos</button>
+                </div>
+                <div class="space-y-2">
+                    <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Secured Image Manifest Index</h5>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="media-gallery-matrix-view"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="modal-compliance-update" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full space-y-4 relative animate-fadeIn">
+            <h3 class="text-lg font-bold text-slate-900" id="cu-modal-title">Renew Certification</h3>
+            <div class="space-y-3 text-left">
+                <label class="block text-xs font-semibold text-slate-400 uppercase">Input Updated Validity Expiration Target Date</label>
+                <input type="date" id="cu-modal-date" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none">
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeComplianceUpdateModal()" class="flex-1 bg-slate-100 text-slate-600 py-2.5 rounded-xl font-medium text-xs">Cancel</button>
+                <button onclick="commitComplianceRenewalEvent()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-xs shadow-sm">Commit Record Update</button>
             </div>
         </div>
     </div>
 
     <script>
-        // System Reactive State LocalStorage Registers
-        let properties = JSON.parse(localStorage.getItem('hub_properties')) || [
-            { id: 1, name: "Oakwood Apartments, Apt 4B", landlordEmail: "landlord1@example.com", tasks: [] },
-            { id: 2, name: "Maple Street House, No. 12", landlordEmail: "landlord2@example.com", tasks: [] }
+        // System Data State Stores
+        let properties = JSON.parse(localStorage.getItem('db_properties')) || [];
+        let employees = JSON.parse(localStorage.getItem('db_employees')) || [
+            { name: "Dovid", pin: "1111", role: "Manager" },
+            { name: "Issac", pin: "2222", role: "Operator" },
+            { name: "Shea", pin: "3333", role: "Operator" }
         ];
-        let employees = JSON.parse(localStorage.getItem('hub_employees')) || ["Issac", "Shea", "David"];
-        let archivedTasks = JSON.parse(localStorage.getItem('hub_archive')) || [];
+        let archivedTasks = JSON.parse(localStorage.getItem('db_archive')) || [];
+        
+        let currentUserSessionProfile = null;
         let contextActivePropertyId = null;
+        let complianceRenewalContext = null;
 
-        function persistData() {
-            localStorage.setItem('hub_properties', JSON.stringify(properties));
-            localStorage.setItem('hub_employees', JSON.stringify(employees));
-            localStorage.setItem('hub_archive', JSON.stringify(archivedTasks));
+        function commitCloudSyncEngine() {
+            localStorage.setItem('db_properties', JSON.stringify(properties));
+            localStorage.setItem('db_employees', JSON.stringify(employees));
+            localStorage.setItem('db_archive', JSON.stringify(archivedTasks));
         }
 
-        // Global Tab Navigation
+        // Authentication Event Pipeline Mock Handler (Simulates Firebase Node Routing Profiles)
+        function handleAuthSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value.trim();
+            if(email) {
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('pin-screen').classList.remove('hidden');
+                populatePinProfileSelectionMenu();
+            }
+        }
+
+        function populatePinProfileSelectionMenu() {
+            const select = document.getElementById('pin-user-select');
+            select.innerHTML = '';
+            employees.forEach(emp => {
+                select.innerHTML += `<option value="${emp.name}">${emp.name} (${emp.role})</option>`;
+            });
+        }
+
+        function verifyPersonnelPin() {
+            const selectedName = document.getElementById('pin-user-select').value;
+            const inputPin = document.getElementById('pin-input').value;
+            const profile = employees.find(emp => emp.name === selectedName && emp.pin === inputPin);
+
+            if(profile) {
+                currentUserSessionProfile = profile;
+                document.getElementById('pin-screen').classList.add('hidden');
+                document.getElementById('app-wrapper').classList.remove('hidden');
+                
+                // Set Up Access Levels
+                document.getElementById('user-badge').innerText = `Profile: ${profile.name} (${profile.role})`;
+                if(profile.role === 'Manager') {
+                    document.getElementById('nav-settings').classList.remove('hidden');
+                } else {
+                    document.getElementById('nav-settings').classList.add('hidden');
+                }
+                
+                document.getElementById('pin-input').value = '';
+                switchTab('dashboard');
+            } else {
+                alert("Security handshake mismatch. Invalid identification PIN provided.");
+            }
+        }
+
+        function logoutSession() {
+            currentUserSessionProfile = null;
+            document.getElementById('app-wrapper').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+        }
+
+        // Global Nav Control
         function switchTab(tabId) {
             ['dashboard', 'properties', 'tasks', 'archive', 'settings'].forEach(tab => {
-                document.getElementById(`page-${tab}`).classList.add('hidden');
-                document.getElementById(`nav-${tab}`).className = "w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium";
+                const element = document.getElementById(`page-${tab}`);
+                if(element) element.classList.add('hidden');
+                const navBtn = document.getElementById(`nav-${tab}`);
+                if(navBtn) navBtn.className = "w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm";
             });
             document.getElementById(`page-${tabId}`).classList.remove('hidden');
-            document.getElementById(`nav-${tabId}`).className = "w-full text-left px-4 py-3 rounded-xl transition-all duration-200 bg-blue-600 font-medium text-white shadow-md shadow-blue-600/10";
+            document.getElementById(`nav-${tabId}`).className = "w-full text-left px-4 py-3 rounded-xl transition-all duration-200 bg-blue-600 font-medium text-white text-sm shadow-md shadow-blue-600/10";
             
             if(tabId === 'dashboard') updateDashboardMetrics();
             if(tabId === 'properties') renderPropertiesRegistry();
             if(tabId === 'tasks') renderLiveTasksWorkspace();
             if(tabId === 'archive') renderArchiveLedger();
-            if(tabId === 'settings') { renderStaffSettings(); loadConfigInputs(); }
+            if(tabId === 'settings') renderStaffSettings();
         }
 
         function updateDashboardMetrics() {
@@ -254,294 +396,214 @@
             document.getElementById('dash-archived-tasks').innerText = archivedTasks.length;
             
             let totalPending = 0;
+            const absoluteHorizonToday = new Date();
+            
             properties.forEach(p => {
-                totalPending += p.tasks.filter(t => t.status === 'Pending').length;
+                totalPending += (p.tasks || []).filter(t => t.status === 'Pending').length;
+                
+                // Track compliance alert loops
+                if(p.compliance) {
+                    ['epc', 'eicr', 'gas', 'custom'].forEach(field => {
+                        if(p.compliance[field] && p.compliance[field].date) {
+                            const diffDays = Math.ceil((new Date(p.compliance[field].date) - absoluteHorizonToday) / (1000 * 60 * 60 * 24));
+                            if(diffDays <= 30) totalPending++;
+                        }
+                    });
+                }
             });
             document.getElementById('dash-pending-tasks').innerText = totalPending;
         }
 
-        // Render Clean List View Table
+        // Portfolio Management Render Engine
         function renderPropertiesRegistry() {
             const tbody = document.getElementById('portfolio-table-rows');
             tbody.innerHTML = '';
-
             if(properties.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 italic">No business assets found in catalog registry.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 italic">No property assets indexed globally.</td></tr>`;
                 return;
             }
 
             properties.forEach(prop => {
-                const pendingCount = prop.tasks.filter(t => t.status === 'Pending').length;
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/70 transition-colors cursor-pointer";
-                // Entire row click drops configuration layout workspace popup
-                tr.onclick = (e) => {
-                    if(e.target.tagName === 'BUTTON') return;
-                    openPropertyWorkspaceModal(prop.id);
-                };
+                let activeCount = (prop.tasks || []).filter(t => t.status === 'Pending').length;
+                const absoluteHorizonToday = new Date();
+                
+                if(prop.compliance) {
+                    ['epc', 'eicr', 'gas', 'custom'].forEach(field => {
+                        if(prop.compliance[field] && prop.compliance[field].date) {
+                            if(Math.ceil((new Date(prop.compliance[field].date) - absoluteHorizonToday) / (1000 * 60 * 60 * 24)) <= 30) activeCount++;
+                        }
+                    });
+                }
 
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/70 transition-colors cursor-pointer text-xs md:text-sm";
+                tr.onclick = (e) => { if(e.target.tagName !== 'BUTTON') openPropertyWorkspaceModal(prop.id); };
                 tr.innerHTML = `
-                    <td class="p-4 pl-6 font-bold text-slate-800 text-base tracking-tight">${prop.name}</td>
-                    <td class="p-4 text-slate-500 text-sm">${prop.landlordEmail}</td>
+                    <td class="p-4 pl-6 font-bold text-slate-900">${prop.name}</td>
+                    <td class="p-4 text-slate-500 font-medium">${prop.postcode}, ${prop.town}</td>
+                    <td class="p-4 text-slate-600">
+                        <div class="font-semibold text-slate-800">${prop.llName}</div>
+                        <div class="text-[11px] text-slate-400">${prop.llEmail} | ${prop.llPhone}</div>
+                    </td>
                     <td class="p-4 text-center">
-                        <span class="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider ${pendingCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-400'}">
-                            ${pendingCount} Open
-                        </span>
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide ${activeCount > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-400'}">${activeCount} Flagged</span>
                     </td>
                     <td class="p-4 text-right pr-6">
-                        <button onclick="deleteProperty(${prop.id})" class="text-slate-300 hover:text-rose-500 text-xs font-bold tracking-wide uppercase transition-colors">Delete</button>
+                        <button onclick="triggerSmsMessageNotification(${prop.id})" class="text-blue-500 hover:text-blue-700 font-bold uppercase tracking-wide text-[11px] mr-3">💬 Text SMS</button>
+                        <button onclick="deleteProperty(${prop.id})" class="text-slate-300 hover:text-rose-600 font-bold uppercase tracking-wide text-[11px]">Delete</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // Modal Controllers Engine
         function openNewPropertyModal() { document.getElementById('modal-new-property').classList.remove('hidden'); }
         function closeNewPropertyModal() { document.getElementById('modal-new-property').classList.add('hidden'); }
 
+        function submitNewProperty(e) {
+            e.preventDefault();
+            properties.push({
+                id: Date.now(),
+                name: document.getElementById('p-form-name').value.trim(),
+                town: document.getElementById('p-form-town').value.trim(),
+                postcode: document.getElementById('p-form-postcode').value.trim(),
+                llName: document.getElementById('p-form-ll-name').value.trim(),
+                llEmail: document.getElementById('p-form-ll-email').value.trim(),
+                llPhone: document.getElementById('p-form-ll-phone').value.trim(),
+                tasks: [],
+                compliance: { epc: {date:''}, eicr: {date:''}, gas: {date:''}, custom: {title:'', date:''} },
+                media: []
+            });
+            commitCloudSyncEngine();
+            closeNewPropertyModal();
+            renderPropertiesRegistry();
+            document.getElementById('modal-new-property').querySelector('form').reset();
+        }
+
+        function deleteProperty(id) {
+            if(confirm("Permanently strip this asset configuration mapping entry profile matrix data log from system?")) {
+                properties = properties.filter(p => p.id !== id);
+                commitCloudSyncEngine();
+                renderPropertiesRegistry();
+            }
+        }
+
+        function triggerSmsMessageNotification(propId) {
+            const prop = properties.find(p => p.id === propId);
+            if(!prop) return;
+            // Native system handler invocation link mapping configuration protocol fallback route trigger option choice layout
+            alert(`Opening default communications gateway to transmit operational update SMS to ${prop.llName} (${prop.llPhone})`);
+            window.open(`sms:${prop.llPhone}?body=Hello ${prop.llName}, this is an operational notification from management regarding the status tracking updates on your property profile unit asset: ${prop.name}.`);
+        }
+
+        // Property Workspace Sub-Navigation Component
         function openPropertyWorkspaceModal(propertyId) {
             contextActivePropertyId = propertyId;
             const prop = properties.find(p => p.id === propertyId);
             if(!prop) return;
 
             document.getElementById('modal-workspace-title').innerText = prop.name;
-            document.getElementById('modal-workspace-subtitle').innerText = `Notifications Dest: ${prop.landlordEmail}`;
+            document.getElementById('modal-workspace-subtitle').innerText = `Postcode Horizon: ${prop.postcode} | Landlord: ${prop.llName} (${prop.llPhone})`;
 
-            // Generate personnel checkbox matrix inside the workspace modal view instance
-            const checkContainer = document.getElementById('modal-checkbox-matrix-staff');
-            checkContainer.innerHTML = '';
+            // Setup Personnel Key Assignments Matrix View
+            const staffContainer = document.getElementById('k-staff-matrix');
+            staffContainer.innerHTML = '';
             employees.forEach(emp => {
-                checkContainer.innerHTML += `
-                    <label class="inline-flex items-center gap-2 cursor-pointer bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100/70 transition-colors">
-                        <input type="checkbox" name="modal-emp-selection" value="${emp}" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 border-slate-300" />
-                        <span class="text-sm text-slate-700 font-medium">${emp}</span>
+                staffContainer.innerHTML += `
+                    <label class="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-semibold">
+                        <input type="checkbox" name="k-staff-checkbox" value="${emp.name}" class="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 border-slate-300">
+                        <span>${emp.name}</span>
                     </label>
                 `;
             });
 
-            // Re-render permanent timeline log
-            renderModalPropertyLogs(prop);
+            // Sync forms with local data
+            if(prop.compliance) {
+                document.getElementById('c-epc-date').value = prop.compliance.epc?.date || '';
+                document.getElementById('c-eicr-date').value = prop.compliance.eicr?.date || '';
+                document.getElementById('c-gas-date').value = prop.compliance.gas?.date || '';
+                document.getElementById('c-custom-title').value = prop.compliance.custom?.title || '';
+                document.getElementById('c-custom-date').value = prop.compliance.custom?.date || '';
+            }
 
-            // Bind workspace creation form submission event pipeline handler
-            const form = document.getElementById('modal-task-form');
-            form.onsubmit = (e) => executeModalTaskGeneration(e, propertyId);
-
+            renderWorkspaceKeyLogs(prop);
+            renderComplianceSummaryBoard(prop);
+            renderWorkspaceMediaGallery(prop);
+            
+            switchModalSubTab('keys');
             document.getElementById('modal-property-workspace').classList.remove('hidden');
         }
 
         function closePropertyWorkspaceModal() {
             document.getElementById('modal-property-workspace').classList.add('hidden');
-            document.getElementById('modal-task-form').reset();
             contextActivePropertyId = null;
             renderPropertiesRegistry();
         }
 
-        function renderModalPropertyLogs(prop) {
-            const logsContainer = document.getElementById('modal-workspace-history-logs');
-            logsContainer.innerHTML = '';
+        function switchModalSubTab(subTabId) {
+            ['keys', 'compliance', 'media'].forEach(st => {
+                document.getElementById(`modal-subtab-${st}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${st}`).className = "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide bg-slate-100 text-slate-600";
+            });
+            document.getElementById(`modal-subtab-${subTabId}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${subTabId}`).className = "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide bg-slate-900 text-white";
+        }
 
-            if(prop.tasks.length === 0) {
-                logsContainer.innerHTML = `<p class="text-sm text-slate-400 italic py-4">No tasks tracked historical for this location catalog profile.</p>`;
+        // Subtab Module 1 Logic: Keys Distributions Actions
+        function renderWorkspaceKeyLogs(prop) {
+            const container = document.getElementById('k-history-logs');
+            container.innerHTML = '';
+            if((prop.tasks || []).length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic">No key tracking workflows spawned for this property asset unit profile folder listing.</p>`;
                 return;
             }
-
             prop.tasks.forEach(t => {
-                const statusColor = t.status === 'Collected' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-amber-50 text-amber-700 border-amber-100';
-                logsContainer.innerHTML += `
-                    <div class="flex flex-col justify-between text-xs p-3.5 border border-slate-100 rounded-xl bg-slate-50/50 space-y-1">
-                        <div class="flex items-center justify-between">
-                            <span class="font-bold text-slate-800 text-sm">🔑 Key Transfer Action</span>
-                            <span class="px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase tracking-wider ${statusColor}">${t.status}</span>
+                const badgeStyle = t.status === 'Collected' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+                container.innerHTML += `
+                    <div class="p-3 border border-slate-100 bg-slate-50/50 rounded-xl space-y-1 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-800">🔑 Key Action Vault Distribution</span>
+                            <span class="px-2 py-0.5 border text-[9px] font-black uppercase rounded ${badgeStyle}">${t.status}</span>
                         </div>
-                        <p class="text-slate-500 text-xs">📍 Location/Vault: <strong class="text-slate-700">${t.currentLocation}</strong> | Assignee: <strong class="text-slate-700">${t.assignedEmployee}</strong></p>
-                        ${t.notes ? `<p class="text-[11px] bg-white border border-slate-100 px-2.5 py-1 rounded-md text-slate-500 mt-1 italic">Note: ${t.notes}</p>` : ''}
+                        <p class="text-slate-500">Depot Address: <strong class="text-slate-700">${t.currentLocation}</strong></p>
+                        <p class="text-slate-400 text-[11px]">Courier Agent Assignments: [${t.assignedEmployee}] | Horizon: ${t.scheduledDateTime}</p>
                     </div>
                 `;
             });
         }
 
-        function executeModalTaskGeneration(e, propertyId) {
+        function spawnKeyTask(e) {
             e.preventDefault();
-            const prop = properties.find(p => p.id === propertyId);
+            const prop = properties.find(p => p.id === contextActivePropertyId);
+            const checkboxes = document.querySelectorAll('input[name="k-staff-checkbox"]:checked');
+            const workers = Array.from(checkboxes).map(cb => cb.value);
 
-            const checkedBoxes = document.querySelectorAll('input[name="modal-emp-selection"]:checked');
-            const selectedStaff = Array.from(checkedBoxes).map(cb => cb.value);
-
-            if(selectedStaff.length === 0) {
-                alert("Please select at least one assigned personnel member.");
+            if(workers.length === 0) {
+                alert("Please map at least one operator profile context assignee.");
                 return;
             }
 
             prop.tasks.push({
                 id: Date.now(),
-                currentLocation: document.getElementById('w-modal-location').value.trim(),
-                scheduledDateTime: document.getElementById('w-modal-date').value,
-                assignedEmployee: selectedStaff.join(', '),
-                notes: document.getElementById('w-modal-notes').value.trim(),
+                currentLocation: document.getElementById('k-vault-address').value.trim(),
+                scheduledDateTime: document.getElementById('k-target-date').value,
+                assignedEmployee: workers.join(', '),
+                notes: document.getElementById('k-notes').value.trim(),
                 status: 'Pending'
             });
 
-            persistData();
-            renderModalPropertyLogs(prop);
-            document.getElementById('modal-task-form').reset();
-            alert("Task dynamically deployed into Task Center pipeline!");
+            commitCloudSyncEngine();
+            renderWorkspaceKeyLogs(prop);
+            document.getElementById('k-vault-address').value = '';
+            document.getElementById('k-notes').value = '';
+            alert("Key workflow pipeline transaction executed smoothly!");
         }
 
-        function submitNewProperty(e) {
+        // Subtab Module 2 Logic: Statutory Compliance Tracking Framework Panels
+        function saveComplianceRegistry(e) {
             e.preventDefault();
-            const nameIn = document.getElementById('prop-name-input');
-            const emailIn = document.getElementById('prop-email-input');
+            const prop = properties.find(p => p.id === contextActivePropertyId);
             
-            properties.push({ id: Date.now(), name: nameIn.value.trim(), landlordEmail: emailIn.value.trim(), tasks: [] });
-            nameIn.value = ''; emailIn.value = '';
-            
-            persistData();
-            closeNewPropertyModal();
-            renderPropertiesRegistry();
-        }
-
-        function deleteProperty(id) {
-            if(confirm("Confirm asset removal from database portfolio?")) {
-                properties = properties.filter(p => p.id !== id);
-                persistData();
-                renderPropertiesRegistry();
-            }
-        }
-
-        // Live Workspace Task Center Pipeline View
-        function renderLiveTasksWorkspace() {
-            const container = document.getElementById('live-tasks-workspace-container');
-            container.innerHTML = '';
-            let hasActiveTasks = false;
-
-            properties.forEach(prop => {
-                prop.tasks.forEach(task => {
-                    if(task.status === 'Pending') {
-                        hasActiveTasks = true;
-                        const row = document.createElement('div');
-                        row.className = "p-5 border border-slate-100 bg-slate-50/70 rounded-2xl flex flex-col sm:flex-row justify-between sm:items-center gap-4 transition-all hover:bg-slate-50";
-                        row.innerHTML = `
-                            <div>
-                                <span class="bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md">Live Task</span>
-                                <h3 class="text-slate-800 font-extrabold text-base mt-2 tracking-tight">${prop.name}</h3>
-                                <p class="text-xs text-slate-500 mt-1">📍 Depot Location: <strong class="text-slate-700">${task.currentLocation}</strong> | 👤 Courier: <strong class="text-slate-700">${task.assignedEmployee}</strong></p>
-                                ${task.notes ? `<p class="text-xs bg-white text-slate-600 italic px-3 py-1.5 rounded-lg border border-slate-100 mt-2 max-w-xl">Note: ${task.notes}</p>` : ''}
-                                <p class="text-[11px] text-slate-400 mt-2">📅 Schedule Horizon: ${task.scheduledDateTime}</p>
-                            </div>
-                            <button id="btn-${task.id}" onclick="executeCollectionEvent(${prop.id}, ${task.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-3 px-5 rounded-xl h-fit shadow-sm whitespace-nowrap transition-colors">
-                                Confirm Collection
-                            </button>
-                        `;
-                        container.appendChild(row);
-                    }
-                });
-            });
-
-            if(!hasActiveTasks) {
-                container.innerHTML = `<div class="text-center text-slate-400 py-12 italic">🎉 Operational pipeline completely clear. No tasks pending execution!</div>`;
-            }
-        }
-
-        // Lifecycle Movement Dispatches
-        function executeCollectionEvent(propId, taskId) {
-            const prop = properties.find(p => p.id === propId);
-            const task = prop.tasks.find(t => t.id === taskId);
-            const btn = document.getElementById(`btn-${taskId}`);
-
-            const pubKey = localStorage.getItem('hub_pub') || '';
-            const srvId = localStorage.getItem('hub_srv') || '';
-            const tplId = localStorage.getItem('hub_tpl') || '';
-
-            if (btn) { btn.innerText = "⏳ Dispatching..."; btn.disabled = true; }
-
-            const finalizeWorkflowTransition = () => {
-                task.status = 'Collected';
-                archivedTasks.push({
-                    ...task,
-                    propertyName: prop.name,
-                    archivedAt: new Date().toLocaleDateString()
-                });
-                persistData();
-                renderLiveTasksWorkspace();
-            };
-
-            if (!pubKey || !srvId || !tplId) {
-                finalizeWorkflowTransition();
-                return;
-            }
-
-            emailjs.init(pubKey);
-            emailjs.send(srvId, tplId, {
-                to_email: prop.landlordEmail,
-                property_name: prop.name,
-                employee_name: task.assignedEmployee,
-                location: task.currentLocation,
-                date_time: task.scheduledDateTime
-            }).then(() => {
-                finalizeWorkflowTransition();
-            }).catch(err => {
-                console.error(err);
-                finalizeWorkflowTransition();
-            });
-        }
-
-        // Archive Output Presentation Display
-        function renderArchiveLedger() {
-            const body = document.getElementById('archive-table-body');
-            body.innerHTML = '';
-            if(archivedTasks.length === 0) {
-                body.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 italic">No historical archive logs recorded yet.</td></tr>`;
-                return;
-            }
-            archivedTasks.forEach(t => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/50 border-b border-slate-100 text-sm";
-                tr.innerHTML = `
-                    <td class="p-4 font-semibold text-slate-800">${t.propertyName}</td>
-                    <td class="p-4 text-slate-600">${t.currentLocation}</td>
-                    <td class="p-4 text-slate-600">${t.assignedEmployee}</td>
-                    <td class="p-4 text-slate-400">${t.archivedAt}</td>
-                    <td class="p-4 text-right"><span class="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md font-bold text-[10px] uppercase tracking-wider">Collected</span></td>
-                `;
-                body.appendChild(tr);
-            });
-        }
-
-        // Settings Personnel List Processing Controls
-        function renderStaffSettings() {
-            const list = document.getElementById('settings-staff-list');
-            list.innerHTML = '';
-            employees.forEach((employee, index) => {
-                const row = document.createElement('div');
-                row.className = "flex justify-between items-center p-3.5 text-slate-700 text-sm hover:bg-slate-50/50";
-                row.innerHTML = `<span class="font-medium text-slate-800">${employee}</span><button onclick="removeStaffMember(${index})" class="text-rose-500 hover:text-rose-700 text-xs font-bold tracking-wide uppercase">Remove</button>`;
-                list.appendChild(row);
-            });
-        }
-
-        function addStaffMember(e) {
-            e.preventDefault();
-            const input = document.getElementById('staff-name-input');
-            if(input.value.trim()) { employees.push(input.value.trim()); input.value = ''; persistData(); renderStaffSettings(); }
-        }
-
-        function removeStaffMember(index) { employees.splice(index, 1); persistData(); renderStaffSettings(); }
-
-        function saveConfig() {
-            localStorage.setItem('hub_pub', document.getElementById('cfg-public-key').value.trim());
-            localStorage.setItem('hub_srv', document.getElementById('cfg-service-id').value.trim());
-            localStorage.setItem('hub_tpl', document.getElementById('cfg-template-id').value.trim());
-        }
-
-        function loadConfigInputs() {
-            document.getElementById('cfg-public-key').value = localStorage.getItem('hub_pub') || '';
-            document.getElementById('cfg-service-id').value = localStorage.getItem('hub_srv') || '';
-            document.getElementById('cfg-template-id').value = localStorage.getItem('hub_tpl') || '';
-        }
-
-        // Setup Application Run
-        updateDashboardMetrics();
-    </script>
-</body>
-</html>
+            prop.compliance = {
+                epc: { date: document.getElementById('c-epc-date').value },
+                eicr: { date: document.getElementById('c-eicr-date').value
