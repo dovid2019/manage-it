@@ -7,6 +7,35 @@
     <title>Property Management Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Verified System Connection Matrix Parameters
+        const firebaseConfig = {
+            apiKey: "AIzaSyBf0gqgtrKpZwqA0dlr4Upq3noZHGQfQHw",
+            authDomain: "manage-it-2c48a.firebaseapp.com",
+            databaseURL: "https://manage-it-2c48a-default-rtdb.firebaseio.com",
+            projectId: "manage-it-2c48a",
+            storageBucket: "manage-it-2c48a.firebasestorage.app",
+            messagingSenderId: "928702524356",
+            appId: "1:928702524356:web:3cdd8fa1d9587abff21291"
+        };
+
+        // Initialize Firebase Engines
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Map operational context vectors to global scope windows handlers
+        window.dbRef = (path) => ref(database, path);
+        window.dbSet = set;
+        window.dbUpdate = update;
+        window.dbOnValue = onValue;
+        
+        // Signal connection is established and boot app
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
 </head>
 <body class="bg-[#f0f2f5] font-sans antialiased text-slate-800 min-h-screen flex flex-col">
 
@@ -15,7 +44,7 @@
             <div>
                 <span class="text-4xl">🏢</span>
                 <h2 class="text-2xl font-black text-slate-900 mt-2 tracking-tight">System Access Gateway</h2>
-                <p class="text-slate-400 text-sm mt-1">Provide credentials to sync your property data matrix.</p>
+                <p class="text-slate-400 text-sm mt-1">Provide credentials to sync data matrix.</p>
             </div>
             <form onsubmit="handleAuthSubmit(event)" class="space-y-4 text-left">
                 <div>
@@ -64,11 +93,11 @@
                 <div id="user-badge" class="text-[11px] font-semibold text-slate-400 bg-slate-800/60 px-2 py-1 rounded-md mt-2 w-fit">Profile: Loading...</div>
             </div>
             <nav class="space-y-1.5 flex-1">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 bg-blue-600 font-medium text-white">📊 Dashboard</button>
-                <button onclick="switchTab('properties')" id="nav-properties" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium">🏢 Portfolio Registry</button>
-                <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium">📋 Task Center</button>
-                <button onclick="switchTab('archive')" id="nav-archive" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium">🗄️ Task Archive</button>
-                <button onclick="switchTab('settings')" id="nav-settings" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium hidden">⚙️ Settings</button>
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 bg-blue-600 font-medium text-white text-sm">📊 Dashboard</button>
+                <button onclick="switchTab('properties')" id="nav-properties" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm">🏢 Portfolio Registry</button>
+                <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm">📋 Task Center</button>
+                <button onclick="switchTab('archive')" id="nav-archive" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm">🗄️ Task Archive</button>
+                <button onclick="switchTab('settings')" id="nav-settings" class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm hidden">⚙️ Settings</button>
             </nav>
             <button onclick="logoutSession()" class="w-full text-left px-4 py-3 rounded-xl text-rose-400 hover:bg-rose-950/30 font-medium text-sm mt-auto">🚪 Terminate Session</button>
         </aside>
@@ -104,7 +133,7 @@
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                     <header>
                         <h1 class="text-3xl font-bold text-slate-800">Portfolio Registry</h1>
-                        <p class="text-slate-500 mt-1">Select location records entry to configure task engines, handle parameters, or view asset logs.</p>
+                        <p class="text-slate-500 mt-1">Select location records entry to configure parameters or view asset logs.</p>
                     </header>
                     <button onclick="openNewPropertyModal()" class="bg-[#0085d1] hover:bg-[#0074b7] text-white font-semibold px-5 py-3 rounded-xl text-sm shadow-sm transition-colors whitespace-nowrap">
                         ➕ Add New Property Asset
@@ -141,7 +170,7 @@
             <section id="page-archive" class="hidden space-y-8 animate-fadeIn">
                 <header>
                     <h1 class="text-3xl font-bold text-slate-800">Task Archive Ledger</h1>
-                    <p class="text-slate-500 mt-1">Historical verification timeline logs of finalized workflows.</p>
+                    <p class="text-slate-500 mt-1">Historical timeline logs of finalized workflows.</p>
                 </header>
                 <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                     <div class="overflow-x-auto">
@@ -164,7 +193,7 @@
             <section id="page-settings" class="hidden space-y-8 animate-fadeIn">
                 <header>
                     <h1 class="text-3xl font-bold text-slate-800">System Configurations Panel</h1>
-                    <p class="text-slate-500 mt-1">Manage infrastructure, worker records directories, verification pin logs, and distribution routing parameters.</p>
+                    <p class="text-slate-500 mt-1">Manage worker records directories and communication routing parameters.</p>
                 </header>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="bg-white p-8 rounded-[28px] border border-slate-100 shadow-sm space-y-5">
@@ -208,7 +237,7 @@
                 <div class="border-t border-slate-100 pt-3 space-y-3">
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Landlord Information Profiles</label>
                     <input type="text" id="p-form-ll-name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Landlord Full Name">
-                    <input type="email" id="p-form-ll-email" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Landlord Route Email Inbox">
+                    <input type="email" id="p-form-ll-email" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Landlord Email Inbox">
                     <input type="tel" id="p-form-ll-phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-500" placeholder="Landlord Mobile Number">
                 </div>
                 <button type="submit" class="w-full bg-[#0085d1] hover:bg-[#0074b7] text-white font-bold py-3.5 rounded-xl text-sm shadow-sm transition-all">Write Record Matrix</button>
@@ -275,7 +304,7 @@
                 <div class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center bg-slate-50/50 hover:bg-slate-50 transition-colors">
                     <span class="text-3xl">📸</span>
                     <h4 class="text-sm font-bold text-slate-800 mt-2">Marketing Visual Media Upload Vault</h4>
-                    <p class="text-xs text-slate-400 mt-0.5">Select high-definition listing photography to host securely for reference.</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Select high-definition listing photography to host securely.</p>
                     <input type="file" id="media-file-input" accept="image/*" multiple onchange="simulateMediaVaultUpload(event)" class="hidden">
                     <button onclick="document.getElementById('media-file-input').click()" class="mt-3 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold shadow-sm text-slate-700 hover:bg-slate-50">Choose Photos</button>
                 </div>
@@ -303,38 +332,76 @@
     </div>
 
     <script>
-        // System Data State Stores
-        let properties = JSON.parse(localStorage.getItem('db_properties')) || [];
-        let employees = JSON.parse(localStorage.getItem('db_employees')) || [
-            { name: "Dovid", pin: "1111", role: "Manager" },
-            { name: "Issac", pin: "2222", role: "Operator" },
-            { name: "Shea", pin: "3333", role: "Operator" }
-        ];
-        let archivedTasks = JSON.parse(localStorage.getItem('db_archive')) || [];
+        let properties = [];
+        let employees = [];
+        let archivedTasks = [];
         
         let currentUserSessionProfile = null;
         let contextActivePropertyId = null;
         let complianceRenewalContext = null;
 
+        // Sync local variables up to Firebase Realtime Tree Nodes
         function commitCloudSyncEngine() {
-            localStorage.setItem('db_properties', JSON.stringify(properties));
-            localStorage.setItem('db_employees', JSON.stringify(employees));
-            localStorage.setItem('db_archive', JSON.stringify(archivedTasks));
+            if (window.dbSet && window.dbRef) {
+                window.dbSet(window.dbRef('properties'), properties);
+                window.dbSet(window.dbRef('employees'), employees);
+                window.dbSet(window.dbRef('archivedTasks'), archivedTasks);
+            }
         }
 
-        // Authentication Event Pipeline Mock Handler (Simulates Firebase Node Routing Profiles)
+        // Establish real-time stream links across all running machines
+        window.addEventListener('firebase-ready', () => {
+            window.dbOnValue(window.dbRef('properties'), (snapshot) => {
+                properties = snapshot.val() || [];
+                refreshActiveInterfaceViews();
+            });
+
+            window.dbOnValue(window.dbRef('employees'), (snapshot) => {
+                employees = snapshot.val() || [
+                    { name: "Dovid", pin: "1111", role: "Manager" },
+                    { name: "Issac", pin: "2222", role: "Operator" },
+                    { name: "Shea", pin: "3333", role: "Operator" }
+                ];
+                populatePinProfileSelectionMenu();
+                if(currentUserSessionProfile) {
+                    const freshProf = employees.find(e => e.name === currentUserSessionProfile.name);
+                    if(freshProf) currentUserSessionProfile = freshProf;
+                }
+            });
+
+            window.dbOnValue(window.dbRef('archivedTasks'), (snapshot) => {
+                archivedTasks = snapshot.val() || [];
+                refreshActiveInterfaceViews();
+            });
+        });
+
+        function refreshActiveInterfaceViews() {
+            updateDashboardMetrics();
+            renderPropertiesRegistry();
+            renderLiveTasksWorkspace();
+            renderArchiveLedger();
+            if(contextActivePropertyId) {
+                const prop = properties.find(p => p.id === contextActivePropertyId);
+                if(prop) {
+                    renderWorkspaceKeyLogs(prop);
+                    renderComplianceSummaryBoard(prop);
+                    renderWorkspaceMediaGallery(prop);
+                }
+            }
+        }
+
         function handleAuthSubmit(e) {
             e.preventDefault();
             const email = document.getElementById('auth-email').value.trim();
             if(email) {
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('pin-screen').classList.remove('hidden');
-                populatePinProfileSelectionMenu();
             }
         }
 
         function populatePinProfileSelectionMenu() {
             const select = document.getElementById('pin-user-select');
+            if(!select) return;
             select.innerHTML = '';
             employees.forEach(emp => {
                 select.innerHTML += `<option value="${emp.name}">${emp.name} (${emp.role})</option>`;
@@ -351,7 +418,6 @@
                 document.getElementById('pin-screen').classList.add('hidden');
                 document.getElementById('app-wrapper').classList.remove('hidden');
                 
-                // Set Up Access Levels
                 document.getElementById('user-badge').innerText = `Profile: ${profile.name} (${profile.role})`;
                 if(profile.role === 'Manager') {
                     document.getElementById('nav-settings').classList.remove('hidden');
@@ -372,7 +438,6 @@
             document.getElementById('auth-screen').classList.remove('hidden');
         }
 
-        // Global Nav Control
         function switchTab(tabId) {
             ['dashboard', 'properties', 'tasks', 'archive', 'settings'].forEach(tab => {
                 const element = document.getElementById(`page-${tab}`);
@@ -383,10 +448,6 @@
             document.getElementById(`page-${tabId}`).classList.remove('hidden');
             document.getElementById(`nav-${tabId}`).className = "w-full text-left px-4 py-3 rounded-xl transition-all duration-200 bg-blue-600 font-medium text-white text-sm shadow-md shadow-blue-600/10";
             
-            if(tabId === 'dashboard') updateDashboardMetrics();
-            if(tabId === 'properties') renderPropertiesRegistry();
-            if(tabId === 'tasks') renderLiveTasksWorkspace();
-            if(tabId === 'archive') renderArchiveLedger();
             if(tabId === 'settings') renderStaffSettings();
         }
 
@@ -400,8 +461,6 @@
             
             properties.forEach(p => {
                 totalPending += (p.tasks || []).filter(t => t.status === 'Pending').length;
-                
-                // Track compliance alert loops
                 if(p.compliance) {
                     ['epc', 'eicr', 'gas', 'custom'].forEach(field => {
                         if(p.compliance[field] && p.compliance[field].date) {
@@ -414,9 +473,9 @@
             document.getElementById('dash-pending-tasks').innerText = totalPending;
         }
 
-        // Portfolio Management Render Engine
         function renderPropertiesRegistry() {
             const tbody = document.getElementById('portfolio-table-rows');
+            if(!tbody) return;
             tbody.innerHTML = '';
             if(properties.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 italic">No property assets indexed globally.</td></tr>`;
@@ -476,134 +535,23 @@
             });
             commitCloudSyncEngine();
             closeNewPropertyModal();
-            renderPropertiesRegistry();
             document.getElementById('modal-new-property').querySelector('form').reset();
         }
 
         function deleteProperty(id) {
-            if(confirm("Permanently strip this asset configuration mapping entry profile matrix data log from system?")) {
+            if(confirm("Permanently strip this asset entry profile data log from the cloud?")) {
                 properties = properties.filter(p => p.id !== id);
                 commitCloudSyncEngine();
-                renderPropertiesRegistry();
             }
         }
 
         function triggerSmsMessageNotification(propId) {
             const prop = properties.find(p => p.id === propId);
             if(!prop) return;
-            // Native system handler invocation link mapping configuration protocol fallback route trigger option choice layout
             alert(`Opening default communications gateway to transmit operational update SMS to ${prop.llName} (${prop.llPhone})`);
             window.open(`sms:${prop.llPhone}?body=Hello ${prop.llName}, this is an operational notification from management regarding the status tracking updates on your property profile unit asset: ${prop.name}.`);
         }
 
-        // Property Workspace Sub-Navigation Component
         function openPropertyWorkspaceModal(propertyId) {
             contextActivePropertyId = propertyId;
-            const prop = properties.find(p => p.id === propertyId);
-            if(!prop) return;
-
-            document.getElementById('modal-workspace-title').innerText = prop.name;
-            document.getElementById('modal-workspace-subtitle').innerText = `Postcode Horizon: ${prop.postcode} | Landlord: ${prop.llName} (${prop.llPhone})`;
-
-            // Setup Personnel Key Assignments Matrix View
-            const staffContainer = document.getElementById('k-staff-matrix');
-            staffContainer.innerHTML = '';
-            employees.forEach(emp => {
-                staffContainer.innerHTML += `
-                    <label class="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-lg cursor-pointer text-xs font-semibold">
-                        <input type="checkbox" name="k-staff-checkbox" value="${emp.name}" class="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 border-slate-300">
-                        <span>${emp.name}</span>
-                    </label>
-                `;
-            });
-
-            // Sync forms with local data
-            if(prop.compliance) {
-                document.getElementById('c-epc-date').value = prop.compliance.epc?.date || '';
-                document.getElementById('c-eicr-date').value = prop.compliance.eicr?.date || '';
-                document.getElementById('c-gas-date').value = prop.compliance.gas?.date || '';
-                document.getElementById('c-custom-title').value = prop.compliance.custom?.title || '';
-                document.getElementById('c-custom-date').value = prop.compliance.custom?.date || '';
-            }
-
-            renderWorkspaceKeyLogs(prop);
-            renderComplianceSummaryBoard(prop);
-            renderWorkspaceMediaGallery(prop);
-            
-            switchModalSubTab('keys');
-            document.getElementById('modal-property-workspace').classList.remove('hidden');
-        }
-
-        function closePropertyWorkspaceModal() {
-            document.getElementById('modal-property-workspace').classList.add('hidden');
-            contextActivePropertyId = null;
-            renderPropertiesRegistry();
-        }
-
-        function switchModalSubTab(subTabId) {
-            ['keys', 'compliance', 'media'].forEach(st => {
-                document.getElementById(`modal-subtab-${st}`).classList.add('hidden');
-                document.getElementById(`tab-btn-${st}`).className = "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide bg-slate-100 text-slate-600";
-            });
-            document.getElementById(`modal-subtab-${subTabId}`).classList.remove('hidden');
-            document.getElementById(`tab-btn-${subTabId}`).className = "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide bg-slate-900 text-white";
-        }
-
-        // Subtab Module 1 Logic: Keys Distributions Actions
-        function renderWorkspaceKeyLogs(prop) {
-            const container = document.getElementById('k-history-logs');
-            container.innerHTML = '';
-            if((prop.tasks || []).length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 italic">No key tracking workflows spawned for this property asset unit profile folder listing.</p>`;
-                return;
-            }
-            prop.tasks.forEach(t => {
-                const badgeStyle = t.status === 'Collected' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200';
-                container.innerHTML += `
-                    <div class="p-3 border border-slate-100 bg-slate-50/50 rounded-xl space-y-1 text-xs">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-slate-800">🔑 Key Action Vault Distribution</span>
-                            <span class="px-2 py-0.5 border text-[9px] font-black uppercase rounded ${badgeStyle}">${t.status}</span>
-                        </div>
-                        <p class="text-slate-500">Depot Address: <strong class="text-slate-700">${t.currentLocation}</strong></p>
-                        <p class="text-slate-400 text-[11px]">Courier Agent Assignments: [${t.assignedEmployee}] | Horizon: ${t.scheduledDateTime}</p>
-                    </div>
-                `;
-            });
-        }
-
-        function spawnKeyTask(e) {
-            e.preventDefault();
-            const prop = properties.find(p => p.id === contextActivePropertyId);
-            const checkboxes = document.querySelectorAll('input[name="k-staff-checkbox"]:checked');
-            const workers = Array.from(checkboxes).map(cb => cb.value);
-
-            if(workers.length === 0) {
-                alert("Please map at least one operator profile context assignee.");
-                return;
-            }
-
-            prop.tasks.push({
-                id: Date.now(),
-                currentLocation: document.getElementById('k-vault-address').value.trim(),
-                scheduledDateTime: document.getElementById('k-target-date').value,
-                assignedEmployee: workers.join(', '),
-                notes: document.getElementById('k-notes').value.trim(),
-                status: 'Pending'
-            });
-
-            commitCloudSyncEngine();
-            renderWorkspaceKeyLogs(prop);
-            document.getElementById('k-vault-address').value = '';
-            document.getElementById('k-notes').value = '';
-            alert("Key workflow pipeline transaction executed smoothly!");
-        }
-
-        // Subtab Module 2 Logic: Statutory Compliance Tracking Framework Panels
-        function saveComplianceRegistry(e) {
-            e.preventDefault();
-            const prop = properties.find(p => p.id === contextActivePropertyId);
-            
-            prop.compliance = {
-                epc: { date: document.getElementById('c-epc-date').value },
-                eicr: { date: document.getElementById('c-eicr-date').value
+            const prop = properties.find(p => p
