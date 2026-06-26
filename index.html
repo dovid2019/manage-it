@@ -44,18 +44,13 @@
                 <p class="text-slate-400 text-sm mt-1">Provide credentials to sync data matrix.</p>
             </div>
             <form id="gateway-form" onsubmit="handleAuthSubmit(event)" class="space-y-4 text-left">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Email Address</label>
-                    <input type="email" id="auth-email" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm outline-none" placeholder="name@business.com">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Security Password</label>
-                    <input type="password" id="auth-password" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm outline-none" placeholder="••••••••">
-                </div>
-                <button type="submit" class="w-full bg-[#0085d1] hover:bg-[#0074b7] text-white font-bold py-3.5 rounded-xl text-sm transition-all">
-                    Authenticate Account
-                </button>
-            </form>
+    <button type="submit" id="auth-submit-btn" class="w-full bg-[#0085d1] text-white font-bold py-3.5 rounded-xl">
+        Sign In
+    </button>
+    <p class="text-xs text-center text-slate-500">
+        New here? <button type="button" onclick="toggleAuthMode()" class="text-blue-600 font-bold">Create Account</button>
+    </p>
+</form>
         </div>
     </div>
 
