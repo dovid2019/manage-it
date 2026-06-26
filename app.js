@@ -8,6 +8,7 @@ window.addEventListener('firebase-ready', () => {
     console.log("System Initialized and Ready.");
 });
 
+
 // --- 1. Authentication ---
 function handleAuthSubmit(event) {
     event.preventDefault();
