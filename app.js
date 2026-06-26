@@ -1,41 +1,41 @@
-// Wait for Firebase to be ready before initializing UI
+// --- Global Firebase References ---
+let auth, db;
+
+// Listener for when Firebase initializes in your HTML
 window.addEventListener('firebase-ready', () => {
-    console.log("System Ready.");
-    // Initial check: Hide auth screen if user is already logged in
-    // Note: You would add Firebase 'onAuthStateChanged' logic here
+    // These globals are provided by the script in your HTML
+    db = window.dbRef;
+    console.log("System Initialized and Ready.");
 });
 
-// 1. Authentication
+// --- 1. Authentication ---
 function handleAuthSubmit(event) {
     event.preventDefault();
     const email = document.getElementById('auth-email').value;
     const password = document.getElementById('auth-password').value;
-    
+
+    // Placeholder logic for sign-in
+    // In a real app, use: signInWithEmailAndPassword(getAuth(), email, password)
     console.log("Authenticating:", email);
     
-    // Placeholder: Replace with Firebase signInWithEmailAndPassword
-    // For now, we'll simulate a successful login to show the app
+    // Hide Auth Screen, Show App
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('app-wrapper').classList.remove('hidden');
+    document.getElementById('user-badge').innerText = `User: ${email}`;
 }
 
-// 2. Tab Switching
+// --- 2. Navigation & UI ---
 function switchTab(tabName) {
-    // Hide all pages
-    document.getElementById('page-dashboard').classList.add('hidden');
-    document.getElementById('page-properties').classList.add('hidden');
-    document.getElementById('page-tasks').classList.add('hidden');
-    document.getElementById('page-archive').classList.add('hidden');
-    document.getElementById('page-settings').classList.add('hidden');
-
-    // Show selected page
-    document.getElementById(`page-${tabName}`).classList.remove('hidden');
+    // Hide all main pages
+    ['dashboard', 'properties', 'tasks', 'archive', 'settings'].forEach(page => {
+        document.getElementById(`page-${page}`).classList.add('hidden');
+    });
     
-    // Update button styles (basic)
-    console.log("Switched to:", tabName);
+    // Show selected
+    document.getElementById(`page-${tabName}`).classList.remove('hidden');
 }
 
-// 3. Modals
+// --- 3. Property Management ---
 function openNewPropertyModal() {
     document.getElementById('modal-new-property').classList.remove('hidden');
 }
@@ -46,20 +46,30 @@ function closeNewPropertyModal() {
 
 function submitNewProperty(event) {
     event.preventDefault();
-    alert("Property record registered!");
+    alert("Property Registered to Matrix.");
     closeNewPropertyModal();
 }
 
-// 4. Session
+// --- 4. Workspace & Tabs ---
+function switchModalSubTab(tab) {
+    document.getElementById('modal-subtab-keys').classList.add('hidden');
+    document.getElementById('modal-subtab-compliance').classList.add('hidden');
+    document.getElementById('modal-subtab-media').classList.add('hidden');
+    
+    document.getElementById(`modal-subtab-${tab}`).classList.remove('hidden');
+}
+
+// --- 5. Session Control ---
 function logoutSession() {
     if(confirm("Terminate session?")) {
         window.location.reload();
     }
 }
 
-// Placeholder for other functions used in HTML
+// --- 6. Empty Handlers (Fill these as you build features) ---
 function verifyPersonnelPin() { alert("Verification logic needed."); }
-function addStaffMember(event) { event.preventDefault(); alert("Staff added."); }
-function saveConfig() { console.log("Config saved."); }
-function spawnKeyTask(event) { event.preventDefault(); alert("Task spawned."); }
+function addStaffMember(event) { event.preventDefault(); alert("Staff member added."); }
+function saveConfig() { console.log("Config changed."); }
+function spawnKeyTask(event) { event.preventDefault(); alert("Task workflow spawned."); }
 function simulateMediaVaultUpload(event) { alert("Media processed."); }
+function closePropertyWorkspaceModal() { document.getElementById('modal-property-workspace').classList.add('hidden'); }
