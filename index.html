@@ -7,12 +7,40 @@
     <title>Property Management Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-    <script src="app.js" defer></script>
-    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        accent: '#0085d1',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-feature-settings: "cv11" 1; }
+        input, select, textarea { transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+        input:focus, select:focus, textarea:focus {
+            box-shadow: inset 0 0 0 2px rgba(0, 133, 209, 0.1);
+            border-color: #0085d1;
+        }
+        button { transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-primary { @apply bg-[#0085d1] hover:bg-[#0074b7] text-white font-bold transition-all shadow-sm hover:shadow-md; }
+        .btn-secondary { @apply bg-slate-900 hover:bg-slate-800 text-white font-bold transition-all shadow-sm; }
+        .card { @apply bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all; }
+        .modal-backdrop { backdrop-filter: blur(4px); }
+        .nav-button { @apply transition-all duration-150; }
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-open { animation: slideInUp 300ms ease-out; }
+    </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
+        
         const firebaseConfig = {
             apiKey: "AIzaSyBf0gqgtrKpZwqA0dlr4Upq3noZHGQfQHw",
             authDomain: "manage-it-2c48a.firebaseapp.com",
@@ -22,10 +50,10 @@
             messagingSenderId: "928702524356",
             appId: "1:928702524356:web:3cdd8fa1d9587abff21291"
         };
-
+        
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
-
+        
         window.dbRef = (path) => ref(database, path);
         window.dbSet = set;
         window.dbUpdate = update;
@@ -33,180 +61,253 @@
         
         window.dispatchEvent(new Event('firebase-ready'));
     </script>
+    <script src="app.js" defer></script>
 </head>
-<body class="bg-[#f0f2f5] font-sans antialiased text-slate-800 min-h-screen flex flex-col">
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 font-sans antialiased text-slate-800 min-h-screen flex flex-col">
 
-    <div id="auth-screen" class="fixed inset-0 bg-slate-900 flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-8 rounded-[28px] shadow-2xl max-w-md w-full space-y-6 text-center">
+    <!-- AUTH SCREEN -->
+    <div id="auth-screen" class="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full space-y-8 text-center border border-slate-100">
             <div>
-                <span class="text-4xl">🏢</span>
-                <h2 class="text-2xl font-black text-slate-900 mt-2 tracking-tight">System Access Gateway</h2>
-                <p class="text-slate-400 text-sm mt-1">Provide credentials to sync data matrix.</p>
+                <div class="text-5xl mb-4">🏢</div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight">Property Hub</h2>
+                <p class="text-slate-500 text-sm mt-3 font-medium">Enterprise Access Gateway</p>
             </div>
+            
             <form id="gateway-form" onsubmit="handleAuthSubmit(event)" class="space-y-4 text-left">
-    <button type="submit" id="auth-submit-btn" class="w-full bg-[#0085d1] text-white font-bold py-3.5 rounded-xl">
-        Sign In
-    </button>
-    <p class="text-xs text-center text-slate-500">
-        New here? <button type="button" onclick="toggleAuthMode()" class="text-blue-600 font-bold">Create Account</button>
-    </p>
-</form>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Email Address</label>
+                    <input type="email" id="auth-email" required placeholder="admin@property.hub" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm outline-none placeholder-slate-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Password</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm outline-none placeholder-slate-400">
+                </div>
+                <button type="submit" class="btn-primary w-full py-3.5 rounded-xl text-sm font-bold">
+                    🔓 Authenticate
+                </button>
+            </form>
+            
+            <div class="text-center text-xs text-slate-400 border-t border-slate-200 pt-6">
+                <p><strong>Demo Credentials:</strong></p>
+                <p>📧 admin@property.hub</p>
+                <p>🔑 SecurePass123</p>
+            </div>
         </div>
     </div>
 
-    <div id="pin-screen" class="fixed inset-0 bg-slate-950 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white p-8 rounded-[28px] shadow-2xl max-w-sm w-full space-y-6 text-center">
+    <!-- PIN VERIFICATION SCREEN -->
+    <div id="pin-screen" class="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full space-y-8 text-center border border-slate-100">
             <div>
-                <span class="text-4xl">🔑</span>
-                <h2 class="text-2xl font-black text-slate-900 mt-2 tracking-tight">Identity Verification</h2>
-                <p class="text-slate-400 text-sm mt-1">Select profile and input secure identity PIN.</p>
+                <div class="text-5xl mb-4">🔐</div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight">Identity Verification</h2>
+                <p class="text-slate-500 text-sm mt-3">Confirm your secure access PIN</p>
             </div>
+            
             <div class="space-y-4 text-left">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Personnel Profile</label>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Personnel Profile</label>
                     <select id="pin-user-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none"></select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Secure PIN Code</label>
-                    <input type="password" id="pin-input" maxlength="4" placeholder="••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-center text-xl font-bold tracking-widest outline-none">
+                    <label class="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">4-Digit PIN</label>
+                    <input type="password" id="pin-input" maxlength="4" placeholder="••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-center text-2xl font-bold tracking-widest outline-none">
                 </div>
-                <button onclick="verifyPersonnelPin()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm transition-all">
-                    Verify Identity
+                <button onclick="verifyPersonnelPin()" class="btn-secondary w-full py-3.5 rounded-xl text-sm">
+                    🚪 Verify & Enter
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- MAIN APP -->
     <div id="app-wrapper" class="flex flex-1 hidden">
-        <aside class="w-64 bg-slate-900 text-white p-5 space-y-6 flex flex-col shadow-xl shrink-0">
-            <div class="border-b border-slate-800 pb-4 tracking-wide">
-                <div class="text-xl font-bold flex items-center gap-2">🏢 <span class="text-blue-400">Property Hub</span></div>
-                <div id="user-badge" class="text-[11px] font-semibold text-slate-400 bg-slate-800/60 px-2 py-1 rounded-md mt-2 w-fit">Loading profile...</div>
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-gradient-to-b from-slate-900 to-slate-950 text-white p-6 space-y-8 flex flex-col shadow-2xl shrink-0 border-r border-slate-800">
+            <div class="border-b border-slate-800/50 pb-5">
+                <div class="text-2xl font-black flex items-center gap-2 mb-3">
+                    <span>🏢</span>
+                    <span class="text-blue-400">Property Hub</span>
+                </div>
+                <div id="user-badge" class="text-[11px] font-bold text-slate-400 bg-slate-800/70 px-3 py-2 rounded-lg">Loading profile...</div>
             </div>
+
             <nav class="space-y-1.5 flex-1">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full text-left px-4 py-3 rounded-xl bg-blue-600 font-medium text-white text-sm">📊 Dashboard</button>
-                <button onclick="switchTab('properties')" id="nav-properties" class="w-full text-left px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm">🏢 Portfolio Registry</button>
-                <button onclick="switchTab('tasks')" id="nav-tasks" class="w-full text-left px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm">📋 Task Center</button>
-                <button onclick="switchTab('archive')" id="nav-archive" class="w-full text-left px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm">🗄️ Task Archive</button>
-                <button onclick="switchTab('settings')" id="nav-settings" class="w-full text-left px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-medium text-sm hidden">⚙️ Settings</button>
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-button w-full text-left px-4 py-3.5 rounded-xl bg-blue-600 font-bold text-white text-sm hover:bg-blue-700">📊 Dashboard</button>
+                <button onclick="switchTab('properties')" id="nav-properties" class="nav-button w-full text-left px-4 py-3.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-sm">🏘️ Properties</button>
+                <button onclick="switchTab('tasks')" id="nav-tasks" class="nav-button w-full text-left px-4 py-3.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-sm">📋 Tasks</button>
+                <button onclick="switchTab('archive')" id="nav-archive" class="nav-button w-full text-left px-4 py-3.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-sm">📑 Archive</button>
+                <button onclick="switchTab('settings')" id="nav-settings" class="nav-button w-full text-left px-4 py-3.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-sm">⚙️ Settings</button>
             </nav>
-            <button onclick="logoutSession()" class="w-full text-left px-4 py-3 rounded-xl text-rose-400 hover:bg-rose-950/30 font-medium text-sm mt-auto">🚪 Terminate Session</button>
+
+            <button onclick="logoutSession()" class="nav-button w-full text-left px-4 py-3.5 rounded-xl text-rose-400 hover:bg-rose-950/40 font-bold text-sm border border-rose-900/30 hover:border-rose-900/50">
+                🚪 Logout
+            </button>
         </aside>
 
+        <!-- MAIN CONTENT -->
         <main class="flex-1 p-8 md:p-12 overflow-y-auto max-w-7xl mx-auto w-full">
+
+            <!-- DASHBOARD PAGE -->
             <section id="page-dashboard" class="space-y-8">
-                <header>
-                    <h1 class="text-3xl font-bold text-slate-800">Portfolio Dashboard</h1>
-                    <p class="text-slate-500 mt-1">Cross-device synchronized tracking environment.</p>
+                <header class="mb-8">
+                    <h1 class="text-4xl font-black text-slate-900 tracking-tight">Dashboard</h1>
+                    <p class="text-slate-600 mt-2 font-medium">Real-time portfolio overview</p>
                 </header>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Locations</span>
-                        <h3 class="text-3xl font-extrabold text-slate-800 mt-2" id="dash-total-properties">0</h3>
+                    <div class="card p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-bold uppercase text-slate-400 tracking-widest">Total Properties</p>
+                                <h3 class="text-4xl font-black text-slate-900 mt-3" id="dash-total-properties">0</h3>
+                            </div>
+                            <div class="text-4xl opacity-50">🏘️</div>
+                        </div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Actions</span>
-                        <h3 class="text-3xl font-extrabold text-amber-500 mt-2" id="dash-pending-tasks">0</h3>
+
+                    <div class="card p-6 border-l-4 border-l-amber-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-bold uppercase text-slate-400 tracking-widest">Active Tasks</p>
+                                <h3 class="text-4xl font-black text-amber-500 mt-3" id="dash-pending-tasks">0</h3>
+                            </div>
+                            <div class="text-4xl opacity-50">📋</div>
+                        </div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Archived Actions</span>
-                        <h3 class="text-3xl font-extrabold text-emerald-500 mt-2" id="dash-archived-tasks">0</h3>
+
+                    <div class="card p-6 border-l-4 border-l-emerald-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-bold uppercase text-slate-400 tracking-widest">Completed</p>
+                                <h3 class="text-4xl font-black text-emerald-500 mt-3" id="dash-archived-tasks">0</h3>
+                            </div>
+                            <div class="text-4xl opacity-50">✅</div>
+                        </div>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">System Operators</span>
-                        <h3 class="text-3xl font-extrabold text-blue-500 mt-2" id="dash-total-staff">0</h3>
+
+                    <div class="card p-6 border-l-4 border-l-blue-500">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-bold uppercase text-slate-400 tracking-widest">Team Members</p>
+                                <h3 class="text-4xl font-black text-blue-500 mt-3" id="dash-total-staff">0</h3>
+                            </div>
+                            <div class="text-4xl opacity-50">👥</div>
+                        </div>
                     </div>
                 </div>
             </section>
 
+            <!-- PROPERTIES PAGE -->
             <section id="page-properties" class="hidden space-y-8">
-                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
                     <header>
-                        <h1 class="text-3xl font-bold text-slate-800">Portfolio Registry</h1>
-                        <p class="text-slate-500 mt-1">Configure location record files here.</p>
+                        <h1 class="text-4xl font-black text-slate-900 tracking-tight">Portfolio</h1>
+                        <p class="text-slate-600 mt-2 font-medium">Manage property locations</p>
                     </header>
-                    <button onclick="openNewPropertyModal()" class="bg-[#0085d1] hover:bg-[#0074b7] text-white font-semibold px-5 py-3 rounded-xl text-sm shadow-sm transition-colors whitespace-nowrap">
-                        ➕ Add New Property Asset
+                    <button onclick="openNewPropertyModal()" class="btn-primary px-6 py-3.5 rounded-xl text-sm whitespace-nowrap">
+                        ➕ Add Property
                     </button>
                 </div>
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+
+                <div class="card overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm border-collapse">
                             <thead>
-                                <tr class="border-b border-slate-100 bg-slate-50/70 text-slate-400 font-semibold uppercase text-xs">
-                                    <th class="p-4 pl-6">Property Location Address</th>
-                                    <th class="p-4">Postcode / Town</th>
-                                    <th class="p-4">Landlord Contact Profile</th>
-                                    <th class="p-4 text-center">Open Actions</th>
-                                    <th class="p-4 text-right pr-6">Action</th>
+                                <tr class="border-b border-slate-200 bg-slate-50 text-slate-600 font-bold uppercase text-xs">
+                                    <th class="p-5 pl-6">Address</th>
+                                    <th class="p-5">Location</th>
+                                    <th class="p-5">Landlord</th>
+                                    <th class="p-5 text-center">Tasks</th>
+                                    <th class="p-5 text-right pr-6">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="portfolio-table-rows" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                            <tbody id="portfolio-table-rows" class="divide-y divide-slate-200 text-slate-700"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
+            <!-- TASKS PAGE -->
             <section id="page-tasks" class="hidden space-y-8">
-                <header>
-                    <h1 class="text-3xl font-bold text-slate-800">Operational Task Center</h1>
-                    <p class="text-slate-500 mt-1">Live functional compliance checklists.</p>
+                <header class="mb-8">
+                    <h1 class="text-4xl font-black text-slate-900 tracking-tight">Task Center</h1>
+                    <p class="text-slate-600 mt-2 font-medium">Active operations and assignments</p>
                 </header>
-                <div class="bg-white p-8 rounded-[28px] border border-slate-100 shadow-sm space-y-6">
+
+                <div class="card p-8 space-y-6">
                     <div class="space-y-4" id="live-tasks-workspace-container"></div>
                 </div>
             </section>
 
+            <!-- ARCHIVE PAGE -->
             <section id="page-archive" class="hidden space-y-8">
-                <header>
-                    <h1 class="text-3xl font-bold text-slate-800">Task Archive Ledger</h1>
-                    <p class="text-slate-500 mt-1">Timeline logs of past completed operations.</p>
+                <header class="mb-8">
+                    <h1 class="text-4xl font-black text-slate-900 tracking-tight">Completed Tasks</h1>
+                    <p class="text-slate-600 mt-2 font-medium">Historical task records</p>
                 </header>
-                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+
+                <div class="card overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm border-collapse">
                             <thead>
-                                <tr class="border-b border-slate-100 bg-slate-50/70 text-slate-400 font-semibold uppercase text-xs">
-                                    <th class="p-4 pl-6">Location Unit</th>
-                                    <th class="p-4">Manifest Info</th>
-                                    <th class="p-4">Personnel Log</th>
-                                    <th class="p-4">Closed Timestamp</th>
-                                    <th class="p-4 text-right pr-6">Status Ledger</th>
+                                <tr class="border-b border-slate-200 bg-slate-50 text-slate-600 font-bold uppercase text-xs">
+                                    <th class="p-5 pl-6">Property</th>
+                                    <th class="p-5">Task</th>
+                                    <th class="p-5">Completed By</th>
+                                    <th class="p-5">Date</th>
+                                    <th class="p-5 text-right pr-6">Status</th>
                                 </tr>
                             </thead>
-                            <tbody id="archive-table-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                            <tbody id="archive-table-body" class="divide-y divide-slate-200 text-slate-700"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
+            <!-- SETTINGS PAGE -->
             <section id="page-settings" class="hidden space-y-8">
-                <header>
-                    <h1 class="text-3xl font-bold text-slate-800">System Configurations Panel</h1>
-                    <p class="text-slate-500 mt-1">Manage personnel lists and notification variables.</p>
+                <header class="mb-8">
+                    <h1 class="text-4xl font-black text-slate-900 tracking-tight">Settings</h1>
+                    <p class="text-slate-600 mt-2 font-medium">System configuration & team management</p>
                 </header>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="bg-white p-8 rounded-[28px] border border-slate-100 shadow-sm space-y-5">
-                        <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Personnel Authorization Matrix</h2>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- STAFF MANAGEMENT -->
+                    <div class="card p-8 space-y-6">
+                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">👥 Team Members</h2>
                         <form onsubmit="addStaffMember(event)" class="space-y-3">
-                            <input type="text" id="staff-name-input" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none" placeholder="Full Name">
+                            <input type="text" id="staff-name-input" required placeholder="Full Name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
                             <div class="grid grid-cols-2 gap-2">
-                                <input type="password" id="staff-pin-input" required maxlength="4" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-center font-bold tracking-widest outline-none" placeholder="PIN (4 Digits)">
-                                <select id="staff-role-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none">
+                                <input type="password" id="staff-pin-input" required maxlength="4" placeholder="PIN (4 digits)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-center font-bold tracking-widest text-sm outline-none">
+                                <select id="staff-role-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
                                     <option value="Operator">Operator</option>
                                     <option value="Manager">Manager</option>
                                 </select>
                             </div>
-                            <button type="submit" class="w-full bg-slate-900 text-white font-medium py-2 rounded-xl text-sm transition-colors shadow-sm">Provision User Profile</button>
+                            <button type="submit" class="btn-secondary w-full py-3 rounded-xl text-sm">Add Member</button>
                         </form>
-                        <div class="divide-y divide-slate-100 border border-slate-100 rounded-xl max-h-64 overflow-y-auto bg-slate-50/30" id="settings-staff-list"></div>
+                        <div class="divide-y divide-slate-200 border border-slate-200 rounded-xl max-h-64 overflow-y-auto bg-slate-50/50" id="settings-staff-list"></div>
                     </div>
-                    <div class="bg-white p-8 rounded-[28px] border border-slate-100 shadow-sm space-y-4">
-                        <h2 class="text-2xl font-bold text-slate-800 tracking-tight">API Communications Hub</h2>
-                        <div class="space-y-4 text-sm">
-                            <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">EmailJS Public Token</label><input type="text" id="cfg-public-key" oninput="saveConfig()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 outline-none"></div>
-                            <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">EmailJS Service Identification</label><input type="text" id="cfg-service-id" oninput="saveConfig()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 outline-none"></div>
-                            <div><label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">EmailJS Template Identification</label><input type="text" id="cfg-template-id" oninput="saveConfig()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 outline-none"></div>
+
+                    <!-- API CONFIG -->
+                    <div class="card p-8 space-y-6">
+                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">📧 Email Integration</h2>
+                        <p class="text-sm text-slate-600">Configure EmailJS for notifications</p>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Public Key</label>
+                                <input type="text" id="cfg-public-key" oninput="saveConfig()" placeholder="your_public_key" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Service ID</label>
+                                <input type="text" id="cfg-service-id" oninput="saveConfig()" placeholder="service_xxxxx" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Template ID</label>
+                                <input type="text" id="cfg-template-id" oninput="saveConfig()" placeholder="template_xxxxx" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -214,88 +315,121 @@
         </main>
     </div>
 
-    <div id="modal-new-property" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-8 rounded-[28px] shadow-2xl border border-slate-100 space-y-6 w-full max-w-md relative max-h-[95vh] overflow-y-auto">
-            <button onclick="closeNewPropertyModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 text-lg">✕</button>
-            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Register Property Asset</h2>
+    <!-- NEW PROPERTY MODAL -->
+    <div id="modal-new-property" class="fixed inset-0 bg-slate-900/60 modal-backdrop hidden flex items-center justify-center p-4 z-50">
+        <div class="card p-8 w-full max-w-md max-h-[95vh] overflow-y-auto relative modal-open">
+            <button onclick="closeNewPropertyModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-2xl font-light">✕</button>
+            
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">Register Property</h2>
+            
             <form onsubmit="submitNewProperty(event)" class="space-y-4 text-left">
-                <input type="text" id="p-form-name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none" placeholder="Building Name / Street line">
+                <input type="text" id="p-form-name" required placeholder="Building name / street" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
+                
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="text" id="p-form-town" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none" placeholder="Town / City">
-                    <input type="text" id="p-form-postcode" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none" placeholder="Postcode">
+                    <input type="text" id="p-form-town" required placeholder="Town" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
+                    <input type="text" id="p-form-postcode" required placeholder="Postcode" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
                 </div>
-                <div class="border-t border-slate-100 pt-3 space-y-3">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">Landlord Information</label>
-                    <input type="text" id="p-form-ll-name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none" placeholder="Landlord Full Name">
-                    <input type="email" id="p-form-ll-email" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none" placeholder="Landlord Email">
-                    <input type="tel" id="p-form-ll-phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none" placeholder="Landlord Mobile Number">
+
+                <div class="border-t border-slate-200 pt-4 mt-4">
+                    <p class="text-xs font-bold text-slate-500 uppercase mb-3">Landlord Information</p>
+                    <input type="text" id="p-form-ll-name" required placeholder="Full name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none mb-2">
+                    <input type="email" id="p-form-ll-email" required placeholder="Email address" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none mb-2">
+                    <input type="tel" id="p-form-ll-phone" required placeholder="Phone number" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
                 </div>
-                <button type="submit" class="w-full bg-[#0085d1] hover:bg-[#0074b7] text-white font-bold py-3.5 rounded-xl text-sm shadow-sm">Write Record Matrix</button>
+
+                <button type="submit" class="btn-primary w-full py-3.5 rounded-xl text-sm mt-6">Save Property</button>
             </form>
         </div>
     </div>
 
-    <div id="modal-property-workspace" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-8 rounded-[28px] shadow-2xl max-w-5xl w-full max-h-[92vh] overflow-y-auto relative">
-            <button onclick="closePropertyWorkspaceModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+    <!-- PROPERTY WORKSPACE MODAL -->
+    <div id="modal-property-workspace" class="fixed inset-0 bg-slate-900/60 modal-backdrop hidden flex items-center justify-center p-4 z-50">
+        <div class="card p-8 w-full max-w-5xl max-h-[92vh] overflow-y-auto relative modal-open">
+            <button onclick="closePropertyWorkspaceModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-2xl font-light">✕</button>
             
-            <div class="border-b border-slate-100 pb-4 mb-6">
-                <h3 id="modal-workspace-title" class="text-2xl font-black text-slate-900 tracking-tight">Loading asset...</h3>
-                <p id="modal-workspace-subtitle" class="text-sm text-slate-400 mt-0.5">Parameters Tracker</p>
+            <div class="border-b border-slate-200 pb-6 mb-6">
+                <h3 id="modal-workspace-title" class="text-3xl font-black text-slate-900 tracking-tight">Loading...</h3>
+                <p id="modal-workspace-subtitle" class="text-sm text-slate-500 mt-1 font-medium">Property workspace</p>
                 
-                <div class="flex gap-2 mt-4 border-t border-slate-100 pt-3">
-                    <button id="tab-btn-keys" onclick="switchModalSubTab('keys')" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide bg-slate-900 text-white">🔑 Key Control</button>
-                    <button id="tab-btn-compliance" onclick="switchModalSubTab('compliance')" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide bg-slate-100 text-slate-600">🛡️ Compliance</button>
-                    <button id="tab-btn-media" onclick="switchModalSubTab('media')" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide bg-slate-100 text-slate-600">📸 Photos</button>
+                <div class="flex gap-2 mt-6 border-t border-slate-200 pt-4">
+                    <button id="tab-btn-keys" onclick="switchModalSubTab('keys')" class="px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest bg-slate-900 text-white">🔑 Keys</button>
+                    <button id="tab-btn-compliance" onclick="switchModalSubTab('compliance')" class="px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest bg-slate-100 text-slate-600 hover:bg-slate-200">🛡️ Compliance</button>
+                    <button id="tab-btn-media" onclick="switchModalSubTab('media')" class="px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest bg-slate-100 text-slate-600 hover:bg-slate-200">📸 Media</button>
                 </div>
             </div>
 
+            <!-- KEYS TAB -->
             <div id="modal-subtab-keys" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="space-y-4">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Spawn Key Distribution Workflow</h4>
+                <div class="space-y-5">
+                    <h4 class="text-xs font-bold uppercase text-slate-500 tracking-widest">Key Distribution</h4>
                     <form onsubmit="spawnKeyTask(event)" class="space-y-3">
-                        <input type="text" id="k-vault-address" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none" placeholder="Holding Depot Address">
+                        <input type="text" id="k-vault-address" required placeholder="Vault location" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
                         <input type="date" id="k-target-date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
-                        <div class="space-y-1"><label class="block text-xs font-bold text-slate-400 uppercase">Assigned Handlers</label><div class="flex flex-wrap gap-1.5" id="k-staff-matrix"></div></div>
-                        <textarea id="k-notes" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm h-16 resize-none" placeholder="Directions info..."></textarea>
-                        <button type="submit" class="w-full bg-[#0085d1] text-white font-bold py-3 rounded-xl text-xs shadow-sm">Dispatch Key Protocol</button>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Assigned Staff</label>
+                            <div class="flex flex-wrap gap-2" id="k-staff-matrix"></div>
+                        </div>
+                        
+                        <textarea id="k-notes" placeholder="Instructions..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm h-20 resize-none outline-none"></textarea>
+                        <button type="submit" class="btn-primary w-full py-3 rounded-xl text-xs">Dispatch</button>
                     </form>
                 </div>
+
                 <div>
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Key Routing Records Timeline</h4>
+                    <h4 class="text-xs font-bold uppercase text-slate-500 tracking-widest mb-3">History</h4>
                     <div class="space-y-2 max-h-64 overflow-y-auto" id="k-history-logs"></div>
                 </div>
             </div>
 
+            <!-- COMPLIANCE TAB -->
             <div id="modal-subtab-compliance" class="grid grid-cols-1 md:grid-cols-2 gap-8 hidden">
                 <div class="space-y-4">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Statutory Expiration Targets</h4>
-                    <form onsubmit="saveComplianceRegistry(event)" class="space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div><label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">EPC Date</label><input type="date" id="c-epc-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none"></div>
-                            <div><label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">EICR Date</label><input type="date" id="c-eicr-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none"></div>
-                            <div><label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Gas Safe Date</label><input type="date" id="c-gas-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none"></div>
+                    <h4 class="text-xs font-bold uppercase text-slate-500 tracking-widest">Expiration Dates</h4>
+                    <form onsubmit="saveComplianceRegistry(event)" class="space-y-3">
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">EPC</label>
+                                <input type="date" id="c-epc-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">EICR</label>
+                                <input type="date" id="c-eicr-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Gas</label>
+                                <input type="date" id="c-gas-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none">
+                            </div>
                         </div>
-                        <div class="border-t border-slate-100 pt-3 space-y-2">
-                            <label class="block text-xs font-bold text-slate-400 uppercase">Custom Field Variant</label>
-                            <input type="text" id="c-custom-title" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none" placeholder="Certificate Classification Name">
-                            <div><label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Target Horizon</label><input type="date" id="c-custom-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none"></div>
+
+                        <div class="border-t border-slate-200 pt-3">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Custom Field</label>
+                            <input type="text" id="c-custom-title" placeholder="Certificate name" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none mb-2">
+                            <input type="date" id="c-custom-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none">
                         </div>
-                        <button type="submit" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl text-xs shadow-sm">Save Compliance Framework</button>
+
+                        <button type="submit" class="btn-secondary w-full py-3 rounded-xl text-xs mt-4">Save</button>
                     </form>
                 </div>
+
                 <div>
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Compliance Matrix Status</h4>
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-3" id="compliance-status-summary-board"></div>
+                    <h4 class="text-xs font-bold uppercase text-slate-500 tracking-widest mb-3">Status</h4>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-2" id="compliance-status-summary-board"></div>
                 </div>
             </div>
 
-            
+            <!-- MEDIA TAB -->
             <div id="modal-subtab-media" class="space-y-6 hidden">
-                <div class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                    <span class="text-3xl">📸</span>
-                    <h4 class="text-sm font-bold text-slate-800 mt-2">Marketing Media Assets File Vault</h4>
+                <div class="border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center bg-slate-50/60 hover:bg-slate-100 transition-colors cursor-pointer">
+                    <div class="text-5xl mb-3">📸</div>
+                    <h4 class="text-sm font-bold text-slate-800">Upload Photos</h4>
+                    <p class="text-xs text-slate-600 mt-2">Property images & documentation</p>
                     <input type="file" id="media-file-input" accept="image/*" multiple onchange="simulateMediaVaultUpload(event)" class="hidden">
-                    <button onclick="document.getElementById('media-file-input').click()" class="mt-3 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 shadow-sm">Choose Photos</button>
+                    <button type="button" onclick="document.getElementById('media-file-input').click()" class="mt-4 bg-white border border-slate-300 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">Choose Files</button>
                 </div>
-                <div class="space-y-2">
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
