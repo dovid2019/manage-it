@@ -84,7 +84,29 @@ function loadStaffList() {
   const db = window.dbRef('staff');
   window.dbOnValue(db, (snapshot) => {
     const data = snapshot.val();
-    staffList = data ? Object.values(data) : [];
+    staffList = data ? Object.entries(data).map(([key, val]) => ({ id: key, ...val })) : [];
+    
+    // Bootstrap: If no staff exists, create default demo staff
+    if (staffList.length === 0) {
+      const defaultStaff = [
+        { id: 'staff_demo_1', name: 'Issac', pin: '1234', role: 'Manager', email: 'issac@property.hub', createdAt: new Date().toISOString() },
+        { id: 'staff_demo_2', name: 'Shea', pin: '5678', role: 'Operator', email: 'shea@property.hub', createdAt: new Date().toISOString() },
+        { id: 'staff_demo_3', name: 'David', pin: '9012', role: 'Operator', email: 'david@property.hub', createdAt: new Date().toISOString() }
+      ];
+      
+      defaultStaff.forEach(staff => {
+        window.dbSet(window.dbRef(`staff/${staff.id}`), {
+          name: staff.name,
+          pin: staff.pin,
+          role: staff.role,
+          email: staff.email,
+          createdAt: staff.createdAt
+        });
+      });
+      
+      staffList = defaultStaff;
+    }
+    
     populatePinUserSelect();
   });
 }
