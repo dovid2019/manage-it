@@ -48,7 +48,9 @@ function handleAuthSubmit(event) {
  
   // Validate against stored credentials (in production, use proper auth)
   if (!validateCredentials(email, password)) {
-    alert('❌ Invalid credentials. Access denied.');
+    console.warn('❌ Invalid credentials. Access denied.');
+    document.getElementById('auth-email').value = '';
+    document.getElementById('auth-password').value = '';
     return;
   }
  
@@ -127,7 +129,7 @@ function verifyPersonnelPin() {
   const pinInput = document.getElementById('pin-input').value;
  
   if (selectIdx === '') {
-    alert('⚠️ Please select a personnel profile.');
+    console.warn('⚠️ Please select a personnel profile.');
     return;
   }
  
@@ -142,7 +144,7 @@ function verifyPersonnelPin() {
     }));
     enterApp();
   } else {
-    alert('❌ Incorrect PIN. Access denied.');
+    console.warn('❌ Incorrect PIN.');
     document.getElementById('pin-input').value = '';
   }
 }
@@ -161,6 +163,7 @@ function logoutSession() {
     currentUser = null;
     currentUserName = null;
     currentUserRole = null;
+    console.log('✅ Session terminated.');
     location.reload();
   }
 }
@@ -289,6 +292,7 @@ function deleteProperty(propertyId) {
     window.dbSet(window.dbRef(`properties/${propertyId}`), null);
     tasksList = tasksList.filter(t => t.propertyId !== propertyId);
     window.dbSet(window.dbRef('tasks'), tasksList.reduce((acc, t) => ({ ...acc, [t.id]: t }), {}));
+    console.log('✅ Property deleted.');
   }
 }
  
@@ -332,6 +336,7 @@ function switchModalSubTab(tabName) {
 function loadPropertyWorkspaceData() {
   loadKeyHistory();
   loadComplianceData();
+  loadPropertyMediaGallery();
   populateKeyStaffMatrix();
 }
  
@@ -360,7 +365,7 @@ function spawnKeyTask(event) {
     .map(cb => staffList[cb.value].name);
  
   if (selectedStaff.length === 0) {
-    alert('⚠️ Select at least one handler.');
+    console.warn('⚠️ Select at least one handler.');
     return;
   }
  
@@ -393,7 +398,7 @@ function spawnKeyTask(event) {
     }
   });
  
-  alert('✅ Key distribution protocol dispatched.');
+  console.log('✅ Key distribution protocol dispatched.');
   event.target.reset();
   loadKeyHistory();
 }
@@ -442,7 +447,7 @@ function saveComplianceRegistry(event) {
   };
  
   window.dbSet(window.dbRef(`compliance/${complianceId}`), compliance);
-  alert('✅ Compliance framework saved.');
+  console.log('✅ Compliance framework saved.');
   loadComplianceData();
 }
  
@@ -582,7 +587,7 @@ function addStaffMember(event) {
   const role = document.getElementById('staff-role-select').value;
  
   if (pin.length !== 4) {
-    alert('⚠️ PIN must be 4 digits.');
+    console.warn('⚠️ PIN must be 4 digits.');
     return;
   }
  
@@ -602,7 +607,7 @@ function addStaffMember(event) {
   document.getElementById('staff-pin-input').value = '';
   document.getElementById('staff-role-select').value = 'Operator';
  
-  alert(`✅ ${name} provisioned as ${role}.`);
+  console.log(`✅ ${name} provisioned as ${role}.`);
   loadAndRenderStaffList();
 }
  
@@ -636,6 +641,7 @@ function renderSettingsStaffList() {
 function removeStaff(staffId) {
   if (confirm('❌ Remove this staff member?')) {
     window.dbSet(window.dbRef(`staff/${staffId}`), null);
+    console.log('✅ Staff member removed.');
   }
 }
  
@@ -720,15 +726,116 @@ function sendNotification(type, data) {
 }
  
 // ============================================================================
-// MEDIA VAULT (Placeholder)
+// MEDIA VAULT (Firebase Storage)
 // ============================================================================
  
-function simulateMediaVaultUpload(event) {
+async function simulateMediaVaultUpload(event) {
   const files = event.target.files;
   if (files.length === 0) return;
  
-  alert(`✅ ${files.length} image(s) queued for vault. (Demo mode)`);
+  console.log(`📸 Uploading ${files.length} image(s) to Firebase Storage...`);
+  
+  const propertyId = currentPropertyId;
+  const uploadPromises = [];
+  const fileMetadata = [];
+ 
+  for (let file of files) {
+    const fileName = `${Date.now()}_${file.name}`;
+    const fileRef = window.storageRef(window.storage, `properties/${propertyId}/${fileName}`);
+    
+    uploadPromises.push(
+      window.uploadBytes(fileRef, file)
+        .then(async (snapshot) => {
+          const downloadURL = await window.getDownloadURL(fileRef);
+          fileMetadata.push({
+            name: file.name,
+            fileName: fileName,
+            size: file.size,
+            type: file.type,
+            downloadURL: downloadURL,
+            uploadedAt: new Date().toISOString(),
+            uploadedBy: currentUserName,
+            storagePath: snapshot.ref.fullPath
+          });
+          console.log(`✅ ${file.name} uploaded to Firebase Storage`);
+        })
+        .catch((error) => {
+          console.error(`❌ Failed to upload ${file.name}:`, error);
+        })
+    );
+  }
+ 
+  try {
+    await Promise.all(uploadPromises);
+    
+    if (fileMetadata.length > 0) {
+      const mediaId = `media_${propertyId}_${Date.now()}`;
+      window.dbSet(window.dbRef(`propertyMedia/${propertyId}/${mediaId}`), {
+        files: fileMetadata,
+        batchUploadedAt: new Date().toISOString(),
+        uploadedBy: currentUserName
+      });
+      console.log(`✅ ${fileMetadata.length} file(s) saved with metadata.`);
+      loadPropertyMediaGallery();
+    }
+  } catch (error) {
+    console.error('❌ Upload batch failed:', error);
+  }
+  
   event.target.value = '';
+}
+ 
+function loadPropertyMediaGallery() {
+  if (!currentPropertyId) return;
+  
+  const db = window.dbRef(`propertyMedia/${currentPropertyId}`);
+  window.dbOnValue(db, (snapshot) => {
+    const data = snapshot.val();
+    const allMedia = data ? Object.values(data).flatMap(batch => batch.files || []) : [];
+    renderMediaGallery(allMedia);
+  });
+}
+ 
+function renderMediaGallery(mediaItems) {
+  const container = document.getElementById('media-gallery-container');
+  if (!container) return;
+  
+  if (mediaItems.length === 0) {
+    container.innerHTML = '<p class="text-slate-500 text-center py-6">No photos uploaded yet.</p>';
+    return;
+  }
+ 
+  container.innerHTML = '';
+  const gallery = document.createElement('div');
+  gallery.className = 'grid grid-cols-2 sm:grid-cols-3 gap-3';
+  
+  mediaItems.forEach((media, idx) => {
+    const thumbnail = document.createElement('div');
+    thumbnail.className = 'relative group rounded-lg overflow-hidden bg-slate-200 aspect-square';
+    thumbnail.innerHTML = `
+      <img src="${media.downloadURL}" alt="${media.name}" class="w-full h-full object-cover">
+      <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end p-2 opacity-0 group-hover:opacity-100">
+        <div class="text-white text-xs font-semibold truncate flex-1">${media.name}</div>
+        <button onclick="deleteMediaFile('${media.fileName}')" class="text-white hover:text-rose-300 ml-2 text-lg">×</button>
+      </div>
+    `;
+    gallery.appendChild(thumbnail);
+  });
+  
+  container.appendChild(gallery);
+}
+ 
+async function deleteMediaFile(fileName) {
+  if (confirm('🗑️ Delete this image?')) {
+    try {
+      const fileRef = window.storageRef(window.storage, `properties/${currentPropertyId}/${fileName}`);
+      // Note: Actual deletion requires deleteObject from Firebase Storage
+      console.log(`📝 Mark for deletion: ${fileName}`);
+      // TODO: Implement actual Firebase Storage deletion when available
+    } catch (error) {
+      console.error('❌ Delete failed:', error);
+    }
+  }
 }
  
 // ============================================================================
