@@ -40,6 +40,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyBf0gqgtrKpZwqA0dlr4Upq3noZHGQfQHw",
@@ -53,18 +54,24 @@
         
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
+        const storage = getStorage(app);
         
         window.dbRef = (path) => ref(database, path);
         window.dbSet = set;
         window.dbUpdate = update;
         window.dbOnValue = onValue;
+        window.storageRef = storageRef;
+        window.uploadBytes = uploadBytes;
+        window.getDownloadURL = getDownloadURL;
+        window.listAll = listAll;
+        window.storage = storage;
         
         window.dispatchEvent(new Event('firebase-ready'));
     </script>
     <script src="app.js" defer></script>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 font-sans antialiased text-slate-800 min-h-screen flex flex-col">
-
+ 
     <!-- AUTH SCREEN -->
     <div id="auth-screen" class="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 z-50">
         <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full space-y-8 text-center border border-slate-100">
@@ -95,7 +102,7 @@
             </div>
         </div>
     </div>
-
+ 
     <!-- PIN VERIFICATION SCREEN -->
     <div id="pin-screen" class="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full space-y-8 text-center border border-slate-100">
@@ -120,7 +127,7 @@
             </div>
         </div>
     </div>
-
+ 
     <!-- MAIN APP -->
     <div id="app-wrapper" class="flex flex-1 hidden">
         <!-- SIDEBAR -->
@@ -132,7 +139,7 @@
                 </div>
                 <div id="user-badge" class="text-[11px] font-bold text-slate-400 bg-slate-800/70 px-3 py-2 rounded-lg">Loading profile...</div>
             </div>
-
+ 
             <nav class="space-y-1.5 flex-1">
                 <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-button w-full text-left px-4 py-3.5 rounded-xl bg-blue-600 font-bold text-white text-sm hover:bg-blue-700">📊 Dashboard</button>
                 <button onclick="switchTab('properties')" id="nav-properties" class="nav-button w-full text-left px-4 py-3.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-sm">🏘️ Properties</button>
@@ -140,22 +147,22 @@
                 <button onclick="switchTab('archive')" id="nav-archive" class="nav-button w-full text-left px-4 py-3.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-sm">📑 Archive</button>
                 <button onclick="switchTab('settings')" id="nav-settings" class="nav-button w-full text-left px-4 py-3.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white font-bold text-sm">⚙️ Settings</button>
             </nav>
-
+ 
             <button onclick="logoutSession()" class="nav-button w-full text-left px-4 py-3.5 rounded-xl text-rose-400 hover:bg-rose-950/40 font-bold text-sm border border-rose-900/30 hover:border-rose-900/50">
                 🚪 Logout
             </button>
         </aside>
-
+ 
         <!-- MAIN CONTENT -->
         <main class="flex-1 p-8 md:p-12 overflow-y-auto max-w-7xl mx-auto w-full">
-
+ 
             <!-- DASHBOARD PAGE -->
             <section id="page-dashboard" class="space-y-8">
                 <header class="mb-8">
                     <h1 class="text-4xl font-black text-slate-900 tracking-tight">Dashboard</h1>
                     <p class="text-slate-600 mt-2 font-medium">Real-time portfolio overview</p>
                 </header>
-
+ 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="card p-6">
                         <div class="flex items-center justify-between">
@@ -166,7 +173,7 @@
                             <div class="text-4xl opacity-50">🏘️</div>
                         </div>
                     </div>
-
+ 
                     <div class="card p-6 border-l-4 border-l-amber-500">
                         <div class="flex items-center justify-between">
                             <div>
@@ -176,7 +183,7 @@
                             <div class="text-4xl opacity-50">📋</div>
                         </div>
                     </div>
-
+ 
                     <div class="card p-6 border-l-4 border-l-emerald-500">
                         <div class="flex items-center justify-between">
                             <div>
@@ -186,7 +193,7 @@
                             <div class="text-4xl opacity-50">✅</div>
                         </div>
                     </div>
-
+ 
                     <div class="card p-6 border-l-4 border-l-blue-500">
                         <div class="flex items-center justify-between">
                             <div>
@@ -198,7 +205,7 @@
                     </div>
                 </div>
             </section>
-
+ 
             <!-- PROPERTIES PAGE -->
             <section id="page-properties" class="hidden space-y-8">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
@@ -210,7 +217,7 @@
                         ➕ Add Property
                     </button>
                 </div>
-
+ 
                 <div class="card overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm border-collapse">
@@ -228,26 +235,26 @@
                     </div>
                 </div>
             </section>
-
+ 
             <!-- TASKS PAGE -->
             <section id="page-tasks" class="hidden space-y-8">
                 <header class="mb-8">
                     <h1 class="text-4xl font-black text-slate-900 tracking-tight">Task Center</h1>
                     <p class="text-slate-600 mt-2 font-medium">Active operations and assignments</p>
                 </header>
-
+ 
                 <div class="card p-8 space-y-6">
                     <div class="space-y-4" id="live-tasks-workspace-container"></div>
                 </div>
             </section>
-
+ 
             <!-- ARCHIVE PAGE -->
             <section id="page-archive" class="hidden space-y-8">
                 <header class="mb-8">
                     <h1 class="text-4xl font-black text-slate-900 tracking-tight">Completed Tasks</h1>
                     <p class="text-slate-600 mt-2 font-medium">Historical task records</p>
                 </header>
-
+ 
                 <div class="card overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm border-collapse">
@@ -265,14 +272,14 @@
                     </div>
                 </div>
             </section>
-
+ 
             <!-- SETTINGS PAGE -->
             <section id="page-settings" class="hidden space-y-8">
                 <header class="mb-8">
                     <h1 class="text-4xl font-black text-slate-900 tracking-tight">Settings</h1>
                     <p class="text-slate-600 mt-2 font-medium">System configuration & team management</p>
                 </header>
-
+ 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- STAFF MANAGEMENT -->
                     <div class="card p-8 space-y-6">
@@ -290,7 +297,7 @@
                         </form>
                         <div class="divide-y divide-slate-200 border border-slate-200 rounded-xl max-h-64 overflow-y-auto bg-slate-50/50" id="settings-staff-list"></div>
                     </div>
-
+ 
                     <!-- API CONFIG -->
                     <div class="card p-8 space-y-6">
                         <h2 class="text-2xl font-bold text-slate-900 tracking-tight">📧 Email Integration</h2>
@@ -314,9 +321,9 @@
             </section>
         </main>
     </div>
-
+ 
     <!-- NEW PROPERTY MODAL -->
-    <div id="modal-new-property" class="fixed inset-0 bg-slate-900/60 modal-backdrop hidden flex items-center justify-center p-4 z-50">
+    <div id="modal-new-property" class="fixed inset-0 bg-black/70 modal-backdrop hidden flex items-center justify-center p-4 z-50">
         <div class="card p-8 w-full max-w-md max-h-[95vh] overflow-y-auto relative modal-open">
             <button onclick="closeNewPropertyModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-2xl font-light">✕</button>
             
@@ -329,21 +336,21 @@
                     <input type="text" id="p-form-town" required placeholder="Town" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
                     <input type="text" id="p-form-postcode" required placeholder="Postcode" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
                 </div>
-
+ 
                 <div class="border-t border-slate-200 pt-4 mt-4">
                     <p class="text-xs font-bold text-slate-500 uppercase mb-3">Landlord Information</p>
                     <input type="text" id="p-form-ll-name" required placeholder="Full name" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none mb-2">
                     <input type="email" id="p-form-ll-email" required placeholder="Email address" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none mb-2">
                     <input type="tel" id="p-form-ll-phone" required placeholder="Phone number" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none">
                 </div>
-
+ 
                 <button type="submit" class="btn-primary w-full py-3.5 rounded-xl text-sm mt-6">Save Property</button>
             </form>
         </div>
     </div>
-
+ 
     <!-- PROPERTY WORKSPACE MODAL -->
-    <div id="modal-property-workspace" class="fixed inset-0 bg-slate-900/60 modal-backdrop hidden flex items-center justify-center p-4 z-50">
+    <div id="modal-property-workspace" class="fixed inset-0 bg-black/70 modal-backdrop hidden flex items-center justify-center p-4 z-50">
         <div class="card p-8 w-full max-w-5xl max-h-[92vh] overflow-y-auto relative modal-open">
             <button onclick="closePropertyWorkspaceModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-2xl font-light">✕</button>
             
@@ -357,7 +364,7 @@
                     <button id="tab-btn-media" onclick="switchModalSubTab('media')" class="px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest bg-slate-100 text-slate-600 hover:bg-slate-200">📸 Media</button>
                 </div>
             </div>
-
+ 
             <!-- KEYS TAB -->
             <div id="modal-subtab-keys" class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="space-y-5">
@@ -375,13 +382,13 @@
                         <button type="submit" class="btn-primary w-full py-3 rounded-xl text-xs">Dispatch</button>
                     </form>
                 </div>
-
+ 
                 <div>
                     <h4 class="text-xs font-bold uppercase text-slate-500 tracking-widest mb-3">History</h4>
                     <div class="space-y-2 max-h-64 overflow-y-auto" id="k-history-logs"></div>
                 </div>
             </div>
-
+ 
             <!-- COMPLIANCE TAB -->
             <div id="modal-subtab-compliance" class="grid grid-cols-1 md:grid-cols-2 gap-8 hidden">
                 <div class="space-y-4">
@@ -401,23 +408,23 @@
                                 <input type="date" id="c-gas-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none">
                             </div>
                         </div>
-
+ 
                         <div class="border-t border-slate-200 pt-3">
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Custom Field</label>
                             <input type="text" id="c-custom-title" placeholder="Certificate name" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none mb-2">
                             <input type="date" id="c-custom-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none">
                         </div>
-
+ 
                         <button type="submit" class="btn-secondary w-full py-3 rounded-xl text-xs mt-4">Save</button>
                     </form>
                 </div>
-
+ 
                 <div>
                     <h4 class="text-xs font-bold uppercase text-slate-500 tracking-widest mb-3">Status</h4>
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-2" id="compliance-status-summary-board"></div>
                 </div>
             </div>
-
+ 
             <!-- MEDIA TAB -->
             <div id="modal-subtab-media" class="space-y-6 hidden">
                 <div class="border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center bg-slate-50/60 hover:bg-slate-100 transition-colors cursor-pointer">
@@ -427,9 +434,15 @@
                     <input type="file" id="media-file-input" accept="image/*" multiple onchange="simulateMediaVaultUpload(event)" class="hidden">
                     <button type="button" onclick="document.getElementById('media-file-input').click()" class="mt-4 bg-white border border-slate-300 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">Choose Files</button>
                 </div>
+                
+                <div>
+                    <h4 class="text-xs font-bold uppercase text-slate-500 tracking-widest mb-4">Uploaded Images</h4>
+                    <div id="media-gallery-container" class="text-slate-500 text-center py-8">Loading gallery...</div>
+                </div>
             </div>
         </div>
     </div>
-
+ 
 </body>
 </html>
+ 
