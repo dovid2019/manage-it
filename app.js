@@ -17,57 +17,93 @@ let config = { publicKey: '', serviceId: '', templateId: '' };
 // INITIALIZATION & FIREBASE SETUP
 // ============================================================================
  
+let authMode = 'signin'; // 'signin' or 'signup'
+ 
 document.addEventListener('firebase-ready', () => {
   firebaseReady = true;
   console.log('✅ Firebase initialized');
   loadStoredConfig();
-  checkExistingSession();
+  checkAuthState();
 });
  
-function checkExistingSession() {
-  const storedSession = sessionStorage.getItem('pmh-session');
-  if (storedSession) {
-    const session = JSON.parse(storedSession);
-    if (Date.now() - session.timestamp < 3600000) { // 1 hour
-      currentUser = session.email;
+function checkAuthState() {
+  window.onAuthStateChanged(window.auth, (user) => {
+    if (user) {
+      // User is already signed in
+      currentUser = user.email;
+      console.log(`✅ Auto-logged in as ${user.email}`);
       showPinScreen();
-      return;
+    } else {
+      // No user signed in
+      showAuthScreen();
     }
-  }
-  showAuthScreen();
+  });
 }
  
 // ============================================================================
 // AUTHENTICATION FLOW
 // ============================================================================
  
-function handleAuthSubmit(event) {
+function toggleAuthMode() {
+  authMode = authMode === 'signin' ? 'signup' : 'signin';
+  
+  const title = document.getElementById('auth-title');
+  const subtitle = document.getElementById('auth-subtitle');
+  const submitBtn = document.getElementById('auth-submit-btn');
+  const toggleText = document.getElementById('auth-toggle-text');
+  const toggleBtn = document.getElementById('auth-toggle-btn');
+  
+  if (authMode === 'signup') {
+    title.textContent = 'Create Account';
+    subtitle.textContent = 'Sign up to get started';
+    submitBtn.textContent = '✨ Create Account';
+    toggleText.textContent = 'Already have an account?';
+    toggleBtn.textContent = 'Sign In Instead';
+  } else {
+    title.textContent = 'Sign In';
+    subtitle.textContent = 'Enter your credentials to access';
+    submitBtn.textContent = '🔓 Sign In';
+    toggleText.textContent = "Don't have an account?";
+    toggleBtn.textContent = 'Create New Account';
+  }
+}
+ 
+async function handleAuthSubmit(event) {
   event.preventDefault();
   const email = document.getElementById('auth-email').value;
   const password = document.getElementById('auth-password').value;
  
-  // Validate against stored credentials (in production, use proper auth)
-  if (!validateCredentials(email, password)) {
-    console.warn('❌ Invalid credentials. Access denied.');
-    document.getElementById('auth-email').value = '';
-    document.getElementById('auth-password').value = '';
-    return;
+  if (authMode === 'signup') {
+    // Sign up
+    try {
+      const userCredential = await window.createUserWithEmailAndPassword(window.auth, email, password);
+      console.log(`✅ Account created: ${email}`);
+      currentUser = email;
+      
+      // Create user profile in database
+      window.dbSet(window.dbRef(`users/${userCredential.user.uid}`), {
+        email: email,
+        createdAt: new Date().toISOString()
+      });
+      
+      showPinScreen();
+    } catch (error) {
+      console.error(`❌ Signup failed: ${error.message}`);
+      document.getElementById('auth-password').value = '';
+    }
+  } else {
+    // Sign in
+    try {
+      await window.signInWithEmailAndPassword(window.auth, email, password);
+      console.log(`✅ Signed in as ${email}`);
+      currentUser = email;
+      showPinScreen();
+    } catch (error) {
+      console.error(`❌ Sign in failed: ${error.message}`);
+      document.getElementById('auth-email').value = '';
+      document.getElementById('auth-password').value = '';
+    }
   }
- 
-  sessionStorage.setItem('pmh-session', JSON.stringify({
-    email: email,
-    timestamp: Date.now()
-  }));
- 
-  currentUser = email;
-  showPinScreen();
-}
- 
-function validateCredentials(email, password) {
-  // Default credentials (replace with real auth in production)
-  const defaultEmail = 'admin@property.hub';
-  const defaultPassword = 'SecurePass123';
-  return email === defaultEmail && password === defaultPassword;
 }
  
 function showPinScreen() {
@@ -80,6 +116,8 @@ function showAuthScreen() {
   document.getElementById('auth-screen').classList.remove('hidden');
   document.getElementById('pin-screen').classList.add('hidden');
   document.getElementById('app-wrapper').classList.add('hidden');
+  authMode = 'signin';
+  toggleAuthMode(); // Reset to signin mode
 }
  
 function loadStaffList() {
@@ -157,14 +195,19 @@ function enterApp() {
 }
  
 function logoutSession() {
-  if (confirm('🚪 Terminate session and return to gateway?')) {
-    sessionStorage.removeItem('pmh-session');
-    sessionStorage.removeItem('pmh-user');
-    currentUser = null;
-    currentUserName = null;
-    currentUserRole = null;
-    console.log('✅ Session terminated.');
-    location.reload();
+  if (confirm('🚪 Sign out and return to login?')) {
+    window.signOut(window.auth)
+      .then(() => {
+        sessionStorage.removeItem('pmh-user');
+        currentUser = null;
+        currentUserName = null;
+        currentUserRole = null;
+        console.log('✅ Signed out.');
+        showAuthScreen();
+      })
+      .catch((error) => {
+        console.error('❌ Logout failed:', error);
+      });
   }
 }
  
@@ -514,7 +557,13 @@ function renderLiveTasks() {
   const liveTasks = tasksList.filter(t => t.status !== 'completed');
  
   if (liveTasks.length === 0) {
-    container.innerHTML = '<p class="text-slate-400 text-center py-8">✅ No pending tasks. Well done!</p>';
+    container.innerHTML = `
+      <div class="text-center py-12">
+        <div class="text-5xl mb-3">✨</div>
+        <p class="text-slate-500 font-medium">No active tasks</p>
+        <p class="text-slate-400 text-sm mt-1">Create a key distribution task from a property workspace</p>
+      </div>
+    `;
     return;
   }
  
@@ -522,22 +571,26 @@ function renderLiveTasks() {
   liveTasks.forEach(task => {
     const property = propertiesList.find(p => p.id === task.propertyId);
     const taskEl = document.createElement('div');
-    taskEl.className = 'bg-slate-50 border border-slate-200 rounded-xl p-4 flex justify-between items-start';
-    taskEl.innerHTML = `
+    taskEl.className = 'bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-5 flex justify-between items-start hover:shadow-md transition-all';
+    
+    const taskContent = `
       <div class="flex-1">
-        <h4 class="font-bold text-slate-800">${task.title}</h4>
-        <p class="text-xs text-slate-500 mt-1">📍 ${property?.name || 'Unknown'}</p>
-        <p class="text-sm text-slate-600 mt-2">${task.description}</p>
-        <div class="flex gap-2 mt-3">
-          <span class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded">🗓️ ${new Date(task.dueDate).toLocaleDateString()}</span>
-          <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">👤 ${task.assignedTo}</span>
+        <div class="font-bold text-slate-800 text-base">${task.title || 'Key Distribution'}</div>
+        <p class="text-xs text-slate-500 mt-1">📍 ${property?.name || 'Unknown Property'}</p>
+        <p class="text-sm text-slate-600 mt-2">${task.description || task.notes || 'No description'}</p>
+        <div class="flex gap-2 mt-3 flex-wrap">
+          <span class="text-xs bg-amber-100 text-amber-700 px-2.5 py-1 rounded-lg font-semibold">🗓️ ${new Date(task.dueDate || task.targetDate).toLocaleDateString()}</span>
+          <span class="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg font-semibold">👤 ${task.assignedTo || (task.assignedStaff ? task.assignedStaff.join(', ') : 'Unassigned')}</span>
+          <span class="text-xs bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg font-semibold">📝 ${task.createdBy || 'System'}</span>
         </div>
       </div>
-      <div class="flex gap-1 ml-4">
-        <button onclick="completeTask('${task.id}')" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-bold">✓ Done</button>
-        <button onclick="deleteTask('${task.id}')" class="bg-rose-500 hover:bg-rose-600 text-white px-3 py-2 rounded-lg text-xs font-bold">✕ Del</button>
+      <div class="flex gap-2 ml-4 shrink-0">
+        <button onclick="completeTask('${task.id}')" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all">✓ Mark Done</button>
+        <button onclick="deleteTask('${task.id}')" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all">✕ Delete</button>
       </div>
     `;
+    
+    taskEl.innerHTML = taskContent;
     container.appendChild(taskEl);
   });
 }
@@ -798,31 +851,45 @@ function loadPropertyMediaGallery() {
  
 function renderMediaGallery(mediaItems) {
   const container = document.getElementById('media-gallery-container');
-  if (!container) return;
+  if (!container) {
+    console.warn('Media gallery container not found');
+    return;
+  }
   
-  if (mediaItems.length === 0) {
-    container.innerHTML = '<p class="text-slate-500 text-center py-6">No photos uploaded yet.</p>';
+  if (!mediaItems || mediaItems.length === 0) {
+    container.innerHTML = '<p class="text-slate-500 text-center py-8 text-sm">📸 No photos uploaded yet. Upload some images above!</p>';
     return;
   }
  
   container.innerHTML = '';
   const gallery = document.createElement('div');
-  gallery.className = 'grid grid-cols-2 sm:grid-cols-3 gap-3';
+  gallery.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4';
   
   mediaItems.forEach((media, idx) => {
     const thumbnail = document.createElement('div');
-    thumbnail.className = 'relative group rounded-lg overflow-hidden bg-slate-200 aspect-square';
-    thumbnail.innerHTML = `
-      <img src="${media.downloadURL}" alt="${media.name}" class="w-full h-full object-cover">
-      <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end p-2 opacity-0 group-hover:opacity-100">
-        <div class="text-white text-xs font-semibold truncate flex-1">${media.name}</div>
-        <button onclick="deleteMediaFile('${media.fileName}')" class="text-white hover:text-rose-300 ml-2 text-lg">×</button>
-      </div>
-    `;
+    thumbnail.className = 'relative group rounded-lg overflow-hidden bg-slate-200 aspect-square shadow-sm hover:shadow-md transition-all';
+    
+    if (media.downloadURL) {
+      thumbnail.innerHTML = `
+        <img src="${media.downloadURL}" alt="${media.name}" class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
+          <p class="text-white text-xs font-semibold px-2 text-center line-clamp-2 mb-2">${media.name}</p>
+          <button onclick="deleteMediaFile('${media.fileName}')" class="text-white hover:text-rose-300 text-2xl font-light">×</button>
+        </div>
+      `;
+    } else {
+      thumbnail.innerHTML = `
+        <div class="w-full h-full flex items-center justify-center bg-slate-300">
+          <span class="text-slate-600 text-xs">No image</span>
+        </div>
+      `;
+    }
+    
     gallery.appendChild(thumbnail);
   });
   
   container.appendChild(gallery);
+  console.log(`✅ Rendered ${mediaItems.length} images in gallery`);
 }
  
 async function deleteMediaFile(fileName) {
