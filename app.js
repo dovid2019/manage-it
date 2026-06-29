@@ -416,6 +416,7 @@ function spawnKeyTask(event) {
   const keyTask = {
     id: keyTaskId,
     type: 'key_distribution',
+    title: 'Key Distribution',
     propertyId: currentPropertyId,
     vaultAddress: document.getElementById('k-vault-address').value,
     targetDate: document.getElementById('k-target-date').value,
@@ -426,7 +427,8 @@ function spawnKeyTask(event) {
     createdBy: currentUserName
   };
  
-  window.dbSet(window.dbRef(`keyTasks/${keyTaskId}`), keyTask);
+  // FIX: Save to 'tasks' collection instead of 'keyTasks' so they show in the task page
+  window.dbSet(window.dbRef(`tasks/${keyTaskId}`), keyTask);
  
   // Send notifications to assigned staff
   selectedStaff.forEach(staffName => {
@@ -447,23 +449,24 @@ function spawnKeyTask(event) {
 }
  
 function loadKeyHistory() {
-  const db = window.dbRef('keyTasks');
+  // FIX: Load from 'tasks' collection instead of 'keyTasks' to match where tasks are saved
+  const db = window.dbRef('tasks');
   window.dbOnValue(db, (snapshot) => {
     const data = snapshot.val();
-    const allKeyTasks = data ? Object.values(data) : [];
-    const propertyKeyTasks = allKeyTasks.filter(kt => kt.propertyId === currentPropertyId);
+    const allTasks = data ? Object.values(data) : [];
+    const propertyTasks = allTasks.filter(t => t.propertyId === currentPropertyId);
  
     const container = document.getElementById('k-history-logs');
     container.innerHTML = '';
  
-    propertyKeyTasks.forEach(kt => {
+    propertyTasks.forEach(t => {
       const logEl = document.createElement('div');
       logEl.className = 'bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs';
       logEl.innerHTML = `
-        <div class="font-bold text-slate-800">${new Date(kt.createdAt).toLocaleDateString()}</div>
-        <div class="text-slate-600 mt-1">📍 ${kt.vaultAddress}</div>
-        <div class="text-slate-600">👥 ${kt.assignedStaff.join(', ')}</div>
-        <div class="text-slate-500 mt-1">${kt.notes}</div>
+        <div class="font-bold text-slate-800">${new Date(t.createdAt).toLocaleDateString()}</div>
+        <div class="text-slate-600 mt-1">📍 ${t.vaultAddress || 'N/A'}</div>
+        <div class="text-slate-600">👥 ${(t.assignedStaff || []).join(', ')}</div>
+        <div class="text-slate-500 mt-1">${t.notes}</div>
       `;
       container.appendChild(logEl);
     });
@@ -668,7 +671,8 @@ function loadAndRenderStaffList() {
   const db = window.dbRef('staff');
   window.dbOnValue(db, (snapshot) => {
     const data = snapshot.val();
-    staffList = data ? Object.values(data) : [];
+    // FIX: Use Object.entries to preserve staff IDs (not Object.values)
+    staffList = data ? Object.entries(data).map(([key, val]) => ({ id: key, ...val })) : [];
     renderSettingsStaffList();
   });
 }
@@ -914,4 +918,3 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 Property Management Hub initialized.');
   loadAndRenderStaffList();
 });
- 
