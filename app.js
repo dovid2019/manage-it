@@ -32,9 +32,23 @@ function checkAuthState() {
       // User is already signed in
       currentUser = user.email;
       console.log(`✅ Auto-logged in as ${user.email}`);
-      showPinScreen();
+      
+      // FIX: Check if user already has a verified session stored
+      const storedSession = sessionStorage.getItem('pmh-user');
+      if (storedSession) {
+        // User already verified PIN, restore session directly
+        const session = JSON.parse(storedSession);
+        currentUserName = session.name;
+        currentUserRole = session.role;
+        console.log(`✅ Session restored: ${currentUserName}`);
+        enterApp();
+      } else {
+        // New session, show PIN screen
+        showPinScreen();
+      }
     } else {
       // No user signed in
+      sessionStorage.removeItem('pmh-user');
       showAuthScreen();
     }
   });
@@ -797,12 +811,17 @@ async function simulateMediaVaultUpload(event) {
   const fileMetadata = [];
  
   for (let file of files) {
-    const fileName = `${Date.now()}_${file.name}`;
+    // FIX: Use unique timestamp + random suffix for each file to prevent collisions
+    const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const fileName = `${uniqueId}_${file.name}`;
     const fileRef = window.storageRef(window.storage, `properties/${propertyId}/${fileName}`);
+    
+    console.log(`📤 Starting upload for: ${file.name}`);
     
     uploadPromises.push(
       window.uploadBytes(fileRef, file)
         .then(async (snapshot) => {
+          console.log(`✅ File uploaded to storage: ${file.name}`);
           const downloadURL = await window.getDownloadURL(fileRef);
           fileMetadata.push({
             name: file.name,
@@ -814,16 +833,17 @@ async function simulateMediaVaultUpload(event) {
             uploadedBy: currentUserName,
             storagePath: snapshot.ref.fullPath
           });
-          console.log(`✅ ${file.name} uploaded to Firebase Storage`);
+          console.log(`✅ Download URL obtained: ${downloadURL}`);
         })
         .catch((error) => {
-          console.error(`❌ Failed to upload ${file.name}:`, error);
+          console.error(`❌ Failed to upload ${file.name}:`, error.message, error.code);
         })
     );
   }
  
   try {
     await Promise.all(uploadPromises);
+    console.log(`✅ All uploads completed. Metadata items: ${fileMetadata.length}`);
     
     if (fileMetadata.length > 0) {
       const mediaId = `media_${propertyId}_${Date.now()}`;
@@ -832,8 +852,10 @@ async function simulateMediaVaultUpload(event) {
         batchUploadedAt: new Date().toISOString(),
         uploadedBy: currentUserName
       });
-      console.log(`✅ ${fileMetadata.length} file(s) saved with metadata.`);
+      console.log(`✅ ${fileMetadata.length} file(s) saved to database with metadata.`);
       loadPropertyMediaGallery();
+    } else {
+      console.warn('⚠️ No files were successfully uploaded.');
     }
   } catch (error) {
     console.error('❌ Upload batch failed:', error);
@@ -849,6 +871,7 @@ function loadPropertyMediaGallery() {
   window.dbOnValue(db, (snapshot) => {
     const data = snapshot.val();
     const allMedia = data ? Object.values(data).flatMap(batch => batch.files || []) : [];
+    console.log(`📸 Loaded ${allMedia.length} images from database`);
     renderMediaGallery(allMedia);
   });
 }
