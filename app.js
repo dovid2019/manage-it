@@ -11,6 +11,7 @@ let firebaseReady = false;
 let staffList = [];
 let propertiesList = [];
 let tasksList = [];
+let complianceList = [];
 let config = { publicKey: '', serviceId: '', templateId: '' };
  
 // ============================================================================
@@ -254,6 +255,7 @@ function switchTab(tabName) {
 function initializeDashboard() {
   loadProperties();
   loadTasks();
+  loadComplianceList();
   loadStaffStats();
   updateDashboardStats();
 }
@@ -509,6 +511,9 @@ function saveComplianceRegistry(event) {
   window.dbSet(window.dbRef(`compliance/${complianceId}`), compliance);
   console.log('✅ Compliance framework saved.');
   loadComplianceData();
+  
+  // FIX: Generate compliance tasks based on expiry dates
+  generateComplianceTasks(compliance);
 }
  
 function loadComplianceData() {
@@ -552,6 +557,58 @@ function renderComplianceStatus(data) {
     </div>
     ` : ''}
   `;
+}
+
+// FIX: Generate compliance reminder tasks if expiry date is within 30 days or past
+function generateComplianceTasks(compliance) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const datesToCheck = [
+    { name: 'EPC Certificate Renewal', date: compliance.epcDate, icon: '🔍' },
+    { name: 'EICR Inspection Renewal', date: compliance.eicr, icon: '⚡' },
+    { name: 'Gas Safe Check Renewal', date: compliance.gasSafe, icon: '🔥' },
+    { name: `${compliance.customTitle} Renewal`, date: compliance.customDate, icon: '📋' }
+  ];
+  
+  datesToCheck.forEach(item => {
+    if (!item.date) return; // Skip empty dates
+    
+    const expiryDate = new Date(item.date);
+    expiryDate.setHours(0, 0, 0, 0);
+    const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+    
+    // Create task if expiry is within 30 days or has passed
+    if (daysUntilExpiry <= 30) {
+      const taskId = `compliance_${currentPropertyId}_${item.name.replace(/\s+/g, '_')}_${Date.now()}`;
+      const complianceTask = {
+        id: taskId,
+        type: 'compliance_reminder',
+        title: `${item.icon} ${item.name}`,
+        propertyId: currentPropertyId,
+        description: daysUntilExpiry < 0 
+          ? `⚠️ EXPIRED ${Math.abs(daysUntilExpiry)} days ago` 
+          : `⏰ Expires in ${daysUntilExpiry} days`,
+        dueDate: item.date,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        createdBy: currentUserName
+      };
+      
+      // Save to tasks collection so it appears in task page
+      window.dbSet(window.dbRef(`tasks/${taskId}`), complianceTask);
+      console.log(`✅ Compliance task created: ${item.name}`);
+    }
+  });
+}
+
+// FIX: Load all compliance records to generate tasks
+function loadComplianceList() {
+  const db = window.dbRef('compliance');
+  window.dbOnValue(db, (snapshot) => {
+    const data = snapshot.val();
+    complianceList = data ? Object.entries(data).map(([key, val]) => ({ id: key, ...val })) : [];
+  });
 }
  
 // ============================================================================
@@ -804,58 +861,93 @@ async function simulateMediaVaultUpload(event) {
   const files = event.target.files;
   if (files.length === 0) return;
  
-  console.log(`📸 Uploading ${files.length} image(s) to Firebase Storage...`);
+  if (!currentPropertyId) {
+    console.warn('⚠️ No property selected. Cannot upload.');
+    alert('Please make sure you are in a property workspace before uploading.');
+    return;
+  }
+ 
+  console.log(`📸 Starting upload of ${files.length} image(s)...`);
+  console.log(`📍 Property ID: ${currentPropertyId}`);
   
   const propertyId = currentPropertyId;
   const uploadPromises = [];
   const fileMetadata = [];
  
-  for (let file of files) {
-    // FIX: Use unique timestamp + random suffix for each file to prevent collisions
-    const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const fileName = `${uniqueId}_${file.name}`;
-    const fileRef = window.storageRef(window.storage, `properties/${propertyId}/${fileName}`);
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
     
-    console.log(`📤 Starting upload for: ${file.name}`);
+    // FIX: Use unique ID for each file to prevent collisions
+    const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${i}`;
+    const fileName = `${uniqueId}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     
-    uploadPromises.push(
-      window.uploadBytes(fileRef, file)
-        .then(async (snapshot) => {
-          console.log(`✅ File uploaded to storage: ${file.name}`);
-          const downloadURL = await window.getDownloadURL(fileRef);
-          fileMetadata.push({
-            name: file.name,
-            fileName: fileName,
-            size: file.size,
-            type: file.type,
-            downloadURL: downloadURL,
-            uploadedAt: new Date().toISOString(),
-            uploadedBy: currentUserName,
-            storagePath: snapshot.ref.fullPath
-          });
-          console.log(`✅ Download URL obtained: ${downloadURL}`);
-        })
-        .catch((error) => {
-          console.error(`❌ Failed to upload ${file.name}:`, error.message, error.code);
-        })
-    );
+    console.log(`📤 Uploading file ${i + 1}/${files.length}: ${file.name}`);
+    console.log(`   Size: ${(file.size / 1024).toFixed(2)} KB`);
+    console.log(`   Type: ${file.type}`);
+    console.log(`   Storage path: properties/${propertyId}/${fileName}`);
+    
+    try {
+      const fileRef = window.storageRef(window.storage, `properties/${propertyId}/${fileName}`);
+      
+      uploadPromises.push(
+        window.uploadBytes(fileRef, file)
+          .then(async (snapshot) => {
+            console.log(`✅ File uploaded to Firebase Storage: ${file.name}`);
+            console.log(`   Storage path: ${snapshot.ref.fullPath}`);
+            
+            try {
+              const downloadURL = await window.getDownloadURL(fileRef);
+              console.log(`✅ Download URL obtained for ${file.name}`);
+              
+              fileMetadata.push({
+                name: file.name,
+                fileName: fileName,
+                size: file.size,
+                type: file.type,
+                downloadURL: downloadURL,
+                uploadedAt: new Date().toISOString(),
+                uploadedBy: currentUserName,
+                storagePath: snapshot.ref.fullPath
+              });
+              console.log(`✅ Metadata added for ${file.name}`);
+            } catch (urlError) {
+              console.error(`❌ Failed to get download URL for ${file.name}:`, urlError.message, urlError.code);
+            }
+          })
+          .catch((uploadError) => {
+            console.error(`❌ Failed to upload ${file.name}:`, uploadError.message, uploadError.code);
+            console.error(`   Full error:`, uploadError);
+          })
+      );
+    } catch (refError) {
+      console.error(`❌ Error creating storage reference for ${file.name}:`, refError);
+    }
   }
  
   try {
+    console.log(`⏳ Waiting for all uploads to complete...`);
     await Promise.all(uploadPromises);
-    console.log(`✅ All uploads completed. Metadata items: ${fileMetadata.length}`);
+    
+    console.log(`✅ All uploads completed. Total successful: ${fileMetadata.length}/${files.length}`);
     
     if (fileMetadata.length > 0) {
       const mediaId = `media_${propertyId}_${Date.now()}`;
+      console.log(`💾 Saving metadata to database: ${mediaId}`);
+      
       window.dbSet(window.dbRef(`propertyMedia/${propertyId}/${mediaId}`), {
         files: fileMetadata,
         batchUploadedAt: new Date().toISOString(),
         uploadedBy: currentUserName
+      })
+      .then(() => {
+        console.log(`✅ Metadata saved to database`);
+        loadPropertyMediaGallery();
+      })
+      .catch((dbError) => {
+        console.error(`❌ Failed to save metadata to database:`, dbError);
       });
-      console.log(`✅ ${fileMetadata.length} file(s) saved to database with metadata.`);
-      loadPropertyMediaGallery();
     } else {
-      console.warn('⚠️ No files were successfully uploaded.');
+      console.warn('⚠️ No files were successfully uploaded. Check console for errors.');
     }
   } catch (error) {
     console.error('❌ Upload batch failed:', error);
@@ -898,7 +990,7 @@ function renderMediaGallery(mediaItems) {
     
     if (media.downloadURL) {
       thumbnail.innerHTML = `
-        <img src="${media.downloadURL}" alt="${media.name}" class="w-full h-full object-cover">
+        <img src="${media.downloadURL}" alt="${media.name}" class="w-full h-full object-cover" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ccc%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2214%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3EImage Error%3C/text%3E%3C/svg%3E'">
         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
           <p class="text-white text-xs font-semibold px-2 text-center line-clamp-2 mb-2">${media.name}</p>
           <button onclick="deleteMediaFile('${media.fileName}')" class="text-white hover:text-rose-300 text-2xl font-light">×</button>
