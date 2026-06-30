@@ -33,7 +33,7 @@ function checkAuthState() {
       // User is already signed in
       currentUser = user.email;
       console.log(`✅ Auto-logged in as ${user.email}`);
-      
+ 
       // FIX: Check if user already has a verified session stored
       const storedSession = sessionStorage.getItem('pmh-user');
       if (storedSession) {
@@ -61,13 +61,13 @@ function checkAuthState() {
  
 function toggleAuthMode() {
   authMode = authMode === 'signin' ? 'signup' : 'signin';
-  
+ 
   const title = document.getElementById('auth-title');
   const subtitle = document.getElementById('auth-subtitle');
   const submitBtn = document.getElementById('auth-submit-btn');
   const toggleText = document.getElementById('auth-toggle-text');
   const toggleBtn = document.getElementById('auth-toggle-btn');
-  
+ 
   if (authMode === 'signup') {
     title.textContent = 'Create Account';
     subtitle.textContent = 'Sign up to get started';
@@ -94,13 +94,13 @@ async function handleAuthSubmit(event) {
       const userCredential = await window.createUserWithEmailAndPassword(window.auth, email, password);
       console.log(`✅ Account created: ${email}`);
       currentUser = email;
-      
+ 
       // Create user profile in database
       window.dbSet(window.dbRef(`users/${userCredential.user.uid}`), {
         email: email,
         createdAt: new Date().toISOString()
       });
-      
+ 
       showPinScreen();
     } catch (error) {
       console.error(`❌ Signup failed: ${error.message}`);
@@ -140,7 +140,7 @@ function loadStaffList() {
   window.dbOnValue(db, (snapshot) => {
     const data = snapshot.val();
     staffList = data ? Object.entries(data).map(([key, val]) => ({ id: key, ...val })) : [];
-    
+ 
     // Bootstrap: If no staff exists, create default demo staff
     if (staffList.length === 0) {
       const defaultStaff = [
@@ -148,7 +148,7 @@ function loadStaffList() {
         { id: 'staff_demo_2', name: 'Shea', pin: '5678', role: 'Operator', email: 'shea@property.hub', createdAt: new Date().toISOString() },
         { id: 'staff_demo_3', name: 'David', pin: '9012', role: 'Operator', email: 'david@property.hub', createdAt: new Date().toISOString() }
       ];
-      
+ 
       defaultStaff.forEach(staff => {
         window.dbSet(window.dbRef(`staff/${staff.id}`), {
           name: staff.name,
@@ -158,10 +158,10 @@ function loadStaffList() {
           createdAt: staff.createdAt
         });
       });
-      
+ 
       staffList = defaultStaff;
     }
-    
+ 
     populatePinUserSelect();
   });
 }
@@ -256,7 +256,7 @@ function initializeDashboard() {
   loadProperties();
   loadTasks();
   loadComplianceList();
-  loadStaffStats();
+  loadAndRenderStaffList(); // FIX: was loadStaffStats() which doesn't exist - caused ReferenceError
   updateDashboardStats();
 }
  
@@ -511,7 +511,7 @@ function saveComplianceRegistry(event) {
   window.dbSet(window.dbRef(`compliance/${complianceId}`), compliance);
   console.log('✅ Compliance framework saved.');
   loadComplianceData();
-  
+ 
   // FIX: Generate compliance tasks based on expiry dates
   generateComplianceTasks(compliance);
 }
@@ -558,26 +558,26 @@ function renderComplianceStatus(data) {
     ` : ''}
   `;
 }
-
+ 
 // FIX: Generate compliance reminder tasks if expiry date is within 30 days or past
 function generateComplianceTasks(compliance) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+ 
   const datesToCheck = [
     { name: 'EPC Certificate Renewal', date: compliance.epcDate, icon: '🔍' },
     { name: 'EICR Inspection Renewal', date: compliance.eicr, icon: '⚡' },
     { name: 'Gas Safe Check Renewal', date: compliance.gasSafe, icon: '🔥' },
     { name: `${compliance.customTitle} Renewal`, date: compliance.customDate, icon: '📋' }
   ];
-  
+ 
   datesToCheck.forEach(item => {
     if (!item.date) return; // Skip empty dates
-    
+ 
     const expiryDate = new Date(item.date);
     expiryDate.setHours(0, 0, 0, 0);
     const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-    
+ 
     // Create task if expiry is within 30 days or has passed
     if (daysUntilExpiry <= 30) {
       const taskId = `compliance_${currentPropertyId}_${item.name.replace(/\s+/g, '_')}_${Date.now()}`;
@@ -586,22 +586,22 @@ function generateComplianceTasks(compliance) {
         type: 'compliance_reminder',
         title: `${item.icon} ${item.name}`,
         propertyId: currentPropertyId,
-        description: daysUntilExpiry < 0 
-          ? `⚠️ EXPIRED ${Math.abs(daysUntilExpiry)} days ago` 
+        description: daysUntilExpiry < 0
+          ? `⚠️ EXPIRED ${Math.abs(daysUntilExpiry)} days ago`
           : `⏰ Expires in ${daysUntilExpiry} days`,
         dueDate: item.date,
         status: 'pending',
         createdAt: new Date().toISOString(),
         createdBy: currentUserName
       };
-      
+ 
       // Save to tasks collection so it appears in task page
       window.dbSet(window.dbRef(`tasks/${taskId}`), complianceTask);
       console.log(`✅ Compliance task created: ${item.name}`);
     }
   });
 }
-
+ 
 // FIX: Load all compliance records to generate tasks
 function loadComplianceList() {
   const db = window.dbRef('compliance');
@@ -646,7 +646,7 @@ function renderLiveTasks() {
     const property = propertiesList.find(p => p.id === task.propertyId);
     const taskEl = document.createElement('div');
     taskEl.className = 'bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-5 flex justify-between items-start hover:shadow-md transition-all';
-    
+ 
     const taskContent = `
       <div class="flex-1">
         <div class="font-bold text-slate-800 text-base">${task.title || 'Key Distribution'}</div>
@@ -663,7 +663,7 @@ function renderLiveTasks() {
         <button onclick="deleteTask('${task.id}')" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all">✕ Delete</button>
       </div>
     `;
-    
+ 
     taskEl.innerHTML = taskContent;
     container.appendChild(taskEl);
   });
@@ -745,6 +745,7 @@ function loadAndRenderStaffList() {
     // FIX: Use Object.entries to preserve staff IDs (not Object.values)
     staffList = data ? Object.entries(data).map(([key, val]) => ({ id: key, ...val })) : [];
     renderSettingsStaffList();
+    updateDashboardStats(); // FIX: keep dashboard staff count in sync whenever staff list changes
   });
 }
  
@@ -869,36 +870,36 @@ async function simulateMediaVaultUpload(event) {
  
   console.log(`📸 Starting upload of ${files.length} image(s)...`);
   console.log(`📍 Property ID: ${currentPropertyId}`);
-  
+ 
   const propertyId = currentPropertyId;
   const uploadPromises = [];
   const fileMetadata = [];
  
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    
+ 
     // FIX: Use unique ID for each file to prevent collisions
     const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${i}`;
     const fileName = `${uniqueId}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    
+ 
     console.log(`📤 Uploading file ${i + 1}/${files.length}: ${file.name}`);
     console.log(`   Size: ${(file.size / 1024).toFixed(2)} KB`);
     console.log(`   Type: ${file.type}`);
     console.log(`   Storage path: properties/${propertyId}/${fileName}`);
-    
+ 
     try {
       const fileRef = window.storageRef(window.storage, `properties/${propertyId}/${fileName}`);
-      
+ 
       uploadPromises.push(
         window.uploadBytes(fileRef, file)
           .then(async (snapshot) => {
             console.log(`✅ File uploaded to Firebase Storage: ${file.name}`);
             console.log(`   Storage path: ${snapshot.ref.fullPath}`);
-            
+ 
             try {
               const downloadURL = await window.getDownloadURL(fileRef);
               console.log(`✅ Download URL obtained for ${file.name}`);
-              
+ 
               fileMetadata.push({
                 name: file.name,
                 fileName: fileName,
@@ -927,13 +928,13 @@ async function simulateMediaVaultUpload(event) {
   try {
     console.log(`⏳ Waiting for all uploads to complete...`);
     await Promise.all(uploadPromises);
-    
+ 
     console.log(`✅ All uploads completed. Total successful: ${fileMetadata.length}/${files.length}`);
-    
+ 
     if (fileMetadata.length > 0) {
       const mediaId = `media_${propertyId}_${Date.now()}`;
       console.log(`💾 Saving metadata to database: ${mediaId}`);
-      
+ 
       window.dbSet(window.dbRef(`propertyMedia/${propertyId}/${mediaId}`), {
         files: fileMetadata,
         batchUploadedAt: new Date().toISOString(),
@@ -952,13 +953,13 @@ async function simulateMediaVaultUpload(event) {
   } catch (error) {
     console.error('❌ Upload batch failed:', error);
   }
-  
+ 
   event.target.value = '';
 }
  
 function loadPropertyMediaGallery() {
   if (!currentPropertyId) return;
-  
+ 
   const db = window.dbRef(`propertyMedia/${currentPropertyId}`);
   window.dbOnValue(db, (snapshot) => {
     const data = snapshot.val();
@@ -974,7 +975,7 @@ function renderMediaGallery(mediaItems) {
     console.warn('Media gallery container not found');
     return;
   }
-  
+ 
   if (!mediaItems || mediaItems.length === 0) {
     container.innerHTML = '<p class="text-slate-500 text-center py-8 text-sm">📸 No photos uploaded yet. Upload some images above!</p>';
     return;
@@ -983,11 +984,11 @@ function renderMediaGallery(mediaItems) {
   container.innerHTML = '';
   const gallery = document.createElement('div');
   gallery.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4';
-  
+ 
   mediaItems.forEach((media, idx) => {
     const thumbnail = document.createElement('div');
     thumbnail.className = 'relative group rounded-lg overflow-hidden bg-slate-200 aspect-square shadow-sm hover:shadow-md transition-all';
-    
+ 
     if (media.downloadURL) {
       thumbnail.innerHTML = `
         <img src="${media.downloadURL}" alt="${media.name}" class="w-full h-full object-cover" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ccc%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2214%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3EImage Error%3C/text%3E%3C/svg%3E'">
@@ -1003,10 +1004,10 @@ function renderMediaGallery(mediaItems) {
         </div>
       `;
     }
-    
+ 
     gallery.appendChild(thumbnail);
   });
-  
+ 
   container.appendChild(gallery);
   console.log(`✅ Rendered ${mediaItems.length} images in gallery`);
 }
@@ -1033,3 +1034,4 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('🚀 Property Management Hub initialized.');
   loadAndRenderStaffList();
 });
+ 
